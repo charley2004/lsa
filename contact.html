@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact Legit Source Analysis for inquiries, feedback, or questions about our football match analysis services.">
+    <title>Contact Us | Legit Source Analysis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="premium-nav" id="mainNav">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo-brand">
+                    <div class="logo-icon">⚽</div>
+                    <div class="logo-text">
+                        <span class="logo-main">LSA</span>
+                        <span class="logo-sub">Legit Source Analysis</span>
+                    </div>
+                </div>
+                
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="about.html" class="nav-link">About</a>
+                    <a href="analysis.html" class="nav-link">Analysis</a>
+                    <a href="results.html" class="nav-link">Results</a>
+                    <a href="contact.html" class="nav-link active">Contact</a>
+                </div>
+                
+                <button class="mobile-toggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-hero contact-hero">
+        <div class="hero-background">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+        </div>
+        <div class="container">
+            <div class="page-hero-content fade-in-up">
+                <div class="hero-badge">
+                    <span class="badge-icon">💬</span>
+                    <span>Get In Touch</span>
+                </div>
+                <h1>Contact Us</h1>
+                <p>Have questions or feedback? We'd love to hear from you. Reach out to the LSA team.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="contact-grid">
+                
+                <!-- Contact Form -->
+                <div class="contact-form-area fade-in-up">
+                    <h2>Send Us a Message</h2>
+                    <p class="form-intro">
+                        Fill out the form below and we'll get back to you within 24-48 hours.
+                    </p>
+
+                    <form id="contactForm" class="premium-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Full Name *</label>
+                                <input 
+                                    type="text" 
+                                    id="name" 
+                                    name="name" 
+                                    required 
+                                    placeholder="John Doe"
+                                    class="form-input"
+                                >
+                                <span class="form-error" id="nameError"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email" 
+                                    required 
+                                    placeholder="john@example.com"
+                                    class="form-input"
+                                >
+                                <span class="form-error" id="emailError"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject">Subject *</label>
+                            <select id="subject" name="subject" required class="form-select">
+                                <option value="">Select a subject</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="analysis">Analysis Question</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="partnership">Partnership</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <span class="form-error" id="subjectError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">Message *</label>
+                            <textarea 
+                                id="message" 
+                                name="message" 
+                                rows="6" 
+                                required 
+                                placeholder="Tell us how we can help you..."
+                                class="form-textarea"
+                            ></textarea>
+                            <span class="form-error" id="messageError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-container">
+                                <input 
+                                    type="checkbox" 
+                                    id="consent" 
+                                    name="consent" 
+                                    required
+                                    class="form-checkbox"
+                                >
+                                <span class="checkmark"></span>
+                                <span class="checkbox-text">
+                                    I have read and agree to the <a href="disclaimer.html">disclaimer</a> and understand 
+                                    that LSA provides educational content only with no guaranteed outcomes. *
+                                </span>
+                            </label>
+                            <span class="form-error" id="consentError"></span>
+                        </div>
+
+                        <button type="submit" class="btn-premium primary large">
+                            <span>Send Message</span>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        
+                        <div class="form-message" id="formMessage"></div>
+                    </form>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="contact-info-area fade-in-up" style="animation-delay: 0.2s">
+                    <div class="info-card">
+                        <div class="info-icon">📧</div>
+                        <h3>Email</h3>
+                        <p><a href="mailto:info@legitsourceanalysis.com">info@legitsourceanalysis.com</a></p>
+                        <span class="info-note">We typically respond within 24-48 hours</span>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">⏰</div>
+                        <h3>Business Hours</h3>
+                        <p>Monday - Friday<br>9:00 AM - 6:00 PM GMT</p>
+                        <span class="info-note">Closed on weekends and holidays</span>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="info-icon">💬</div>
+                        <h3>Community</h3>
+                        <p>Join our Telegram channel for updates and discussions</p>
+                        <a href="#" class="info-link">
+                            <span>Join Telegram</span>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <div class="info-card important">
+                        <div class="info-icon">⚠️</div>
+                        <h3>Important Notice</h3>
+                        <p>
+                            We do not provide betting tips, guaranteed predictions, or financial advice. 
+                            Inquiries requesting such information will not receive a response.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="section-badge">FAQ</div>
+                <h2>Frequently Asked Questions</h2>
+                <p>Quick answers to common questions</p>
+            </div>
+
+            <div class="faq-grid">
+                <div class="faq-item fade-in-up">
+                    <div class="faq-question">
+                        <h4>Do you provide betting tips?</h4>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>
+                            No. LSA provides educational football analysis only. We do not offer betting tips, 
+                            predictions, or gambling advice of any kind.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-up" style="animation-delay: 0.1s">
+                    <div class="faq-question">
+                        <h4>How often is analysis updated?</h4>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>
+                            We update our analysis regularly based on upcoming fixtures and available data. 
+                            Check the Analysis page for the most current content.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-up" style="animation-delay: 0.2s">
+                    <div class="faq-question">
+                        <h4>Can I request analysis for specific matches?</h4>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>
+                            You can suggest matches through our contact form, but we cannot guarantee coverage 
+                            of specific fixtures as our analysis schedule depends on various factors.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-up" style="animation-delay: 0.3s">
+                    <div class="faq-question">
+                        <h4>Is your content free?</h4>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>
+                            Yes, all LSA content is currently provided free of charge. We do not offer paid 
+                            subscriptions or premium analysis services.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-up" style="animation-delay: 0.4s">
+                    <div class="faq-question">
+                        <h4>How can I report technical issues?</h4>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>
+                            Use the contact form above with "Technical Support" as the subject, or email us 
+                            directly with details about the issue you're experiencing.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-up" style="animation-delay: 0.5s">
+                    <div class="faq-question">
+                        <h4>Do you guarantee analysis accuracy?</h4>
+                        <span class="faq-toggle">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>
+                            No. Football is inherently unpredictable, and we make no guarantees about outcomes. 
+                            Our analysis is for educational purposes and based on available data and statistics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="premium-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <div class="logo-icon">⚽</div>
+                        <div class="logo-text">
+                            <span class="logo-main">LSA</span>
+                            <span class="logo-sub">Legit Source Analysis</span>
+                        </div>
+                    </div>
+                    <p class="footer-tagline">
+                        Professional football match analysis and statistical insights for informed understanding.
+                    </p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Navigation</h4>
+                    <a href="index.html">Home</a>
+                    <a href="about.html">About</a>
+                    <a href="analysis.html">Analysis</a>
+                    <a href="results.html">Results</a>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <a href="disclaimer.html">Disclaimer</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                
+                <div class="footer-notice">
+                    <h4>Important Notice</h4>
+                    <p>All analysis is for educational purposes. Football outcomes are unpredictable. No guarantees provided. 18+ only.</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Legit Source Analysis. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/premium.js"></script>
+</body>
+</html>

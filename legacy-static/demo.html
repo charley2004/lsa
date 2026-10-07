@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" data-theme="refined">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LSA component demo</title>
+<script>
+  // ?theme=ledger switches direction (used by compare.html)
+  const t = new URLSearchParams(location.search).get('theme');
+  if (t) document.documentElement.dataset.theme = t;
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="lsa-redesign.css">
+<style>
+  .demo-label{font:600 .75rem/1 var(--font-num);letter-spacing:.08em;text-transform:uppercase;color:var(--c-text-2);padding:2rem 0 .75rem;border-top:1px dashed var(--c-border-strong);margin-top:1rem}
+</style>
+</head>
+<body>
+
+<nav class="premium-nav">
+  <div class="container nav-wrapper">
+    <a class="logo-brand" href="#"><span class="logo-icon">⚽</span><span class="logo-text"><span class="logo-main">LSA</span><span class="logo-sub">Legit Source Analysis</span></span></a>
+    <div class="nav-links"><a class="nav-link active" href="#">Home</a><a class="nav-link" href="#">About</a><a class="nav-link" href="#">Analysis</a><a class="nav-link" href="#">Results</a><a class="nav-link" href="#">Contact</a></div>
+    <button class="mobile-toggle" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- 1. HERO -->
+<section class="hero-premium">
+  <div class="hero-background"><div class="gradient-orb orb-1"></div><div class="gradient-orb orb-2"></div><div class="gradient-orb orb-3"></div></div>
+  <div class="container hero-content">
+    <div class="hero-text">
+      <div class="hero-badge"><span class="badge-icon">📊</span>Data-Driven Football Insights</div>
+      <h1 class="hero-title">Advanced Football <span class="gradient-text">Match Analysis</span></h1>
+      <p class="hero-description">Statistical analysis, tactical breakdowns and match context — with every result, hit or miss, published openly.</p>
+      <div class="hero-cta">
+        <a href="#" class="btn-premium primary">Explore Analysis <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 3 5 5-5 5"/></svg></a>
+        <a href="#" class="btn-premium secondary">See Our Record</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="stat-number">500+</div><div class="stat-label">Matches analysed</div></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><div class="stat-number">15</div><div class="stat-label">Leagues</div></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><div class="stat-number">69%</div><div class="stat-label">Aligned, 30d</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="floating-card card-1">
+        <div class="card-header"><span class="card-badge sample">Sample</span><span class="card-title">Premier League</span></div>
+        <div class="card-match"><div class="team"><span>Man City</span><span class="score">2</span></div><div class="vs">vs</div><div class="team"><span>Arsenal</span><span class="score">1</span></div></div>
+        <div class="card-stats"><div class="mini-stat"><span class="label">Possession</span><span class="value">58%</span></div><div class="mini-stat"><span class="label">Shots</span><span class="value">14 – 9</span></div></div>
+      </div>
+      <div class="floating-card card-2"><div class="card-content"><span class="card-label">Alignment rate (30d)</span><span class="card-value">69%</span><span class="card-label">29 of 42 matches</span></div></div>
+      <div class="floating-card card-3"><div class="mini-chart"><div class="bar" style="height:60%"></div><div class="bar" style="height:80%"></div><div class="bar" style="height:40%"></div><div class="bar" style="height:95%"></div><div class="bar" style="height:70%"></div></div><div class="card-footer">Team form trend</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="container"><div class="demo-label">4 · Performance stat cards</div></div>
+<section class="performance-overview"><div class="container">
+  <div class="performance-grid">
+    <div class="perf-card"><div class="perf-icon">📊</div><div class="perf-number">42</div><div class="perf-label">Total analysed</div><div class="perf-period">Last 30 days</div></div>
+    <div class="perf-card success"><div class="perf-icon">✓</div><div class="perf-number">29</div><div class="perf-label">Aligned</div><div class="perf-period">69% of total</div></div>
+    <div class="perf-card warning"><div class="perf-icon">⚠</div><div class="perf-number">13</div><div class="perf-label">Unexpected</div><div class="perf-period">31% of total</div></div>
+    <div class="perf-card"><div class="perf-icon">📅</div><div class="perf-number">1.4</div><div class="perf-label">Per day</div><div class="perf-period">Avg. analyses</div></div>
+    <div class="perf-split" role="img" aria-label="29 aligned, 13 unexpected, of 42"><span class="perf-split__aligned" style="--n:29"></span><span class="perf-split__unexpected" style="--n:13"></span></div>
+  </div>
+</div></section>
+
+<div class="container"><div class="demo-label">2 · Match analysis card</div></div>
+<section class="match-analysis-section"><div class="container">
+  <article class="match-card-premium">
+    <div class="match-card-header"><span class="league-badge premier-league">Premier League</span><div class="match-time"><span class="date">Sat, Jan 18</span><span class="time">15:00 GMT</span></div></div>
+    <div class="match-teams-display">
+      <div class="team-display home"><div class="team-badge">🔵</div><div class="team-info"><h3>Manchester City</h3><span class="team-location">Home</span></div></div>
+      <div class="vs-badge">VS</div>
+      <div class="team-display away"><div class="team-badge">🔴</div><div class="team-info"><h3>Arsenal</h3><span class="team-location">Away</span></div></div>
+    </div>
+    <div class="analysis-tabs" role="tablist"><button class="tab active" role="tab" aria-selected="true">Form</button><button class="tab" role="tab" aria-selected="false">Stats</button><button class="tab" role="tab" aria-selected="false">Team news</button><button class="tab" role="tab" aria-selected="false">Summary</button></div>
+    <div class="analysis-content-section">
+      <h4>Recent form · last 5</h4>
+      <div class="form-comparison-modern">
+        <div class="team-form-box"><div class="team-name">Man City</div><div class="form-pills"><span class="pill win">W</span><span class="pill win">W</span><span class="pill draw">D</span><span class="pill win">W</span><span class="pill loss">L</span></div><div class="form-stats"><span class="stat-item">GF <strong>11</strong></span><span class="stat-item">GA <strong>4</strong></span><span class="stat-item">Pts <strong>10</strong></span></div></div>
+        <div class="team-form-box"><div class="team-name">Arsenal</div><div class="form-pills"><span class="pill win">W</span><span class="pill draw">D</span><span class="pill win">W</span><span class="pill win">W</span><span class="pill win">W</span></div><div class="form-stats"><span class="stat-item">GF <strong>9</strong></span><span class="stat-item">GA <strong>3</strong></span><span class="stat-item">Pts <strong>13</strong></span></div></div>
+      </div>
+    </div>
+    <div class="analysis-content-section">
+      <h4>Season averages</h4>
+      <div class="stats-comparison">
+        <div class="stat-row"><div class="stat-label">Expected goals (xG)</div><div class="stat-bars"><div class="bar-container left"><span class="value">2.14</span><div class="bar" style="width:72%"></div></div><div class="bar-container right"><div class="bar" style="width:58%"></div><span class="value">1.71</span></div></div></div>
+        <div class="stat-row"><div class="stat-label">Possession</div><div class="stat-bars"><div class="bar-container left"><span class="value">61%</span><div class="bar" style="width:61%"></div></div><div class="bar-container right"><div class="bar danger" style="width:54%"></div><span class="value">54%</span></div></div></div>
+        <div class="stat-row"><div class="stat-label">Goals conceded / game</div><div class="stat-bars"><div class="bar-container left"><span class="value">0.9</span><div class="bar" style="width:40%"></div></div><div class="bar-container right"><div class="bar" style="width:32%"></div><span class="value">0.7</span></div></div></div>
+      </div>
+    </div>
+    <div class="analysis-summary-box"><div class="summary-icon">📋</div><div class="summary-content"><h4>Analyst read</h4><p>City's home pressing against Arsenal's low-block discipline. Data leans slightly towards the home side, but Arsenal's defensive record keeps this close.</p><p class="summary-note">Educational analysis only. Football is unpredictable; this is not a recommendation to bet.</p></div></div>
+  </article>
+</div></section>
+
+<div class="container"><div class="demo-label">3 · Results table</div></div>
+<section class="results-table-section"><div class="container">
+  <div class="results-table-container">
+    <table class="results-table-modern">
+      <thead><tr><th>Date</th><th>Match</th><th>Final score</th><th>Analysis lean</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td><span class="date-badge">Jan 18</span></td><td><div class="match-cell"><span class="team">Man City</span><span class="vs">vs</span><span class="team">Arsenal</span></div></td><td><span class="score-badge">2–1</span></td><td>Home edge</td><td><span class="outcome-pill aligned">Aligned</span></td></tr>
+        <tr><td><span class="date-badge">Jan 19</span></td><td><div class="match-cell"><span class="team">Real Madrid</span><span class="vs">vs</span><span class="team">Barcelona</span></div></td><td><span class="score-badge">1–3</span></td><td>Home edge</td><td><span class="outcome-pill unexpected">Unexpected</span></td></tr>
+        <tr><td><span class="date-badge">Jan 17</span></td><td><div class="match-cell"><span class="team">Bayern Munich</span><span class="vs">vs</span><span class="team">Dortmund</span></div></td><td><span class="score-badge">3–2</span></td><td>Goals, both sides</td><td><span class="outcome-pill aligned">Aligned</span></td></tr>
+      </tbody>
+    </table>
+    <div class="table-note"><p>Every analysed match is listed, including the ones that went against our read.</p></div>
+  </div>
+</div></section>
+
+<div class="container"><div class="demo-label">5 · Contact form — states</div></div>
+<section class="contact-section"><div class="container">
+  <form class="premium-form" novalidate>
+    <div class="form-row">
+      <div class="form-group is-valid"><label for="n">Name</label><input id="n" class="form-input" value="Tunde Bakare"></div>
+      <div class="form-group is-invalid"><label for="e">Email</label><input id="e" class="form-input" type="email" value="tunde@" aria-invalid="true" aria-describedby="e-err"><span class="form-error" id="e-err">Enter a full email address, like name@example.com</span></div>
+    </div>
+    <div class="form-group"><label for="s">Topic</label><select id="s" class="form-select"><option>Question about an analysis</option><option>Partnership</option></select></div>
+    <div class="form-group"><label for="m">Message</label><textarea id="m" class="form-textarea" placeholder="What would you like to ask?"></textarea><span class="form-hint">Typically answered within 2 working days.</span></div>
+    <div class="form-group"><label class="checkbox-container"><input type="checkbox" class="form-checkbox" checked><span class="checkbox-text">I've read the <a href="#">disclaimer</a> and understand LSA doesn't give betting advice.</span></label></div>
+    <button type="submit" class="btn-premium primary" aria-busy="true">Sending</button>
+    <div class="form-message success" role="status">Message received. We'll reply to tunde@example.com.</div>
+    <div class="form-message info" role="status">The form isn't connected yet — email <a href="#">hello@lsa.example</a> directly.</div>
+  </form>
+</div></section>
+
+<script src="lsa-results-table.js"></script>
+</body>
+</html>

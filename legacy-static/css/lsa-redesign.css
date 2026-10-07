@@ -1,0 +1,1361 @@
+/* =====================================================================
+   LSA REDESIGN v2 — component layer
+   Load AFTER style.css:
+     <link rel="stylesheet" href="style.css">
+     <link rel="stylesheet" href="lsa-redesign.css">
+
+   Pick a direction on <html>:
+     <html data-theme="refined">   Direction A (default if omitted)
+     <html data-theme="ledger">    Direction B — also add the font link:
+       <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+   Mobile-first: every component's BASE rules are the phone layout.
+   Breakpoints only ADD layout:  480 (large phone) · 640 · 768 · 1024.
+
+   Sections
+     0. Tokens — Direction A (refined)
+     1. Tokens — Direction B (ledger)
+     2. Legacy token bridge (old var names -> new tokens)
+     3. Global fixes: focus, motion, overflow, class collisions
+     4. Hero
+     5. Match analysis card (analysis.html)
+     6. Results table (results.html)
+     7. Performance stat cards
+     8. Forms (contact.html)
+     9. Direction B overrides
+   ===================================================================== */
+
+
+/* =====================================================================
+   0. TOKENS — DIRECTION A: "Refined"
+   Same brand blue, tightened. One blue for brand surfaces, one for
+   interaction. Gradients removed from text. All text tokens >= 4.5:1.
+   Contrast ratios are measured against #ffffff unless noted.
+   ===================================================================== */
+:root,
+[data-theme="refined"] {
+    /* Surfaces */
+    --c-bg:            #ffffff;
+    --c-bg-2:          #f8fafc;
+    --c-surface:       #ffffff;
+    --c-surface-2:     #f1f5f9;
+
+    /* Text */
+    --c-ink:           #0f172a;   /* 17.9:1 */
+    --c-text-2:        #475569;   /*  7.6:1  (was #64748b) */
+    --c-text-3:        #64748b;   /*  4.8:1  floor for ANY text (was #94a3b8 = 2.6:1 FAIL) */
+
+    /* Lines */
+    --c-border:        #e2e8f0;   /* decorative dividers only */
+    --c-border-strong: #cbd5e1;
+    --c-control:       #64748b;   /* input/checkbox outlines: 4.8:1 (WCAG 1.4.11 needs 3:1; was 1.24:1) */
+
+    /* Brand */
+    --c-brand:         #1e3a8a;   /* 10.4:1 — buttons, active tab, logo */
+    --c-brand-hover:   #172e6e;
+    --c-action:        #1d4ed8;   /*  6.7:1 — links, accents, focus */
+    --c-on-brand:      #ffffff;
+    --c-brand-tint:    #eff4ff;
+
+    /* Focus */
+    --c-focus:         #1d4ed8;
+    --c-focus-halo:    rgb(29 78 216 / 0.22);
+
+    /* Semantic — darkened so white text passes on them */
+    --c-pos:      #047857;  --c-pos-bg:  #ecfdf5;  --c-pos-ink:  #065f46;   /* white on pos: 5.5:1 (was 2.5) */
+    --c-draw:     #b45309;  --c-draw-bg: #fffbeb;  --c-draw-ink: #92400e;   /* white on draw: 5.0:1 (was 2.2) */
+    --c-neg:      #b91c1c;  --c-neg-bg:  #fef2f2;  --c-neg-ink:  #991b1b;   /* white on neg: 6.5:1 (was 3.8) */
+
+    /* "Unexpected" outcome: deliberately NEUTRAL, not alarm-red.
+       A miss is a data point, not an emergency. */
+    --c-miss:     #475569;  --c-miss-bg: #f1f5f9;  --c-miss-ink: #334155;
+
+    /* Comparison bars: home vs away (neither is "good" or "bad") */
+    --c-home:          #1e3a8a;
+    --c-away:          #64748b;
+
+    /* Shape */
+    --r-1: 0.5rem;
+    --r-2: 0.75rem;
+    --r-3: 1rem;
+
+    /* Elevation: quieter than before */
+    --shadow-1: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 1px rgb(15 23 42 / 0.04);
+    --shadow-2: 0 8px 24px -8px rgb(15 23 42 / 0.14);
+
+    /* Type */
+    --font-num: var(--font-sans);
+    --tap: 44px;
+}
+
+
+/* =====================================================================
+   1. TOKENS — DIRECTION B: "Ledger"
+   An auditor's notebook: warm paper, ink, one cobalt for data, and a
+   burnt-orange SIGNAL reserved for misses. The boldest colour on the
+   page is the "Unexpected" outcome — the honesty is the brand.
+   Monospace numerals, near-square corners, hairlines instead of shadows.
+   Contrast measured against paper #f5f3ee.
+   ===================================================================== */
+[data-theme="ledger"] {
+    --c-bg:            #f5f3ee;
+    --c-bg-2:          #eeebe4;
+    --c-surface:       #fbfaf7;
+    --c-surface-2:     #eeebe4;
+
+    --c-ink:           #15171c;   /* 16.2:1 */
+    --c-text-2:        #474b53;   /*  7.9:1 */
+    --c-text-3:        #62666e;   /*  5.2:1 */
+
+    --c-border:        #dcd8cf;
+    --c-border-strong: #b9b5ab;
+    --c-control:       #7a7e86;   /* ~3.8:1 */
+
+    --c-brand:         #15171c;   /* primary buttons are ink */
+    --c-brand-hover:   #1f3fd1;
+    --c-action:        #1f3fd1;   /* cobalt 7.0:1 */
+    --c-on-brand:      #ffffff;
+    --c-brand-tint:    #e6eafb;
+
+    --c-focus:         #1f3fd1;
+    --c-focus-halo:    rgb(31 63 209 / 0.22);
+
+    --c-pos:      #15803d;  --c-pos-bg:  #e3efe5;  --c-pos-ink:  #14532d;   /* 4.5:1 on paper */
+    --c-draw:     #474b53;  --c-draw-bg: #eeebe4;  --c-draw-ink: #15171c;
+    --c-neg:      #b91c1c;  --c-neg-bg:  #f8e4e1;  --c-neg-ink:  #7f1d1d;
+    --c-miss:     #c2410c;  --c-miss-bg: #fbe5d8;  --c-miss-ink: #9a3412;   /* signal: 4.7:1 on paper, white on it 5.2:1 */
+
+    --c-home:          #1f3fd1;
+    --c-away:          #15171c;
+
+    --r-1: 0.25rem;
+    --r-2: 0.375rem;
+    --r-3: 0.5rem;
+
+    --shadow-1: none;
+    --shadow-2: none;
+
+    --font-num: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+
+/* =====================================================================
+   2. LEGACY TOKEN BRIDGE
+   Remaps the old variable names so EVERY existing rule in style.css
+   (footer, about page, FAQ, etc.) inherits the new palette for free.
+   ===================================================================== */
+:root,
+[data-theme] {
+    --primary-color:    var(--c-brand);
+    --primary-dark:     var(--c-brand-hover);
+    --primary-light:    var(--c-action);
+    --secondary-color:  var(--c-action);
+    --accent-color:     var(--c-action);
+
+    --success: var(--c-pos);
+    --warning: var(--c-draw);
+    --error:   var(--c-neg);
+    --info:    var(--c-action);
+
+    --bg-primary:       var(--c-bg);
+    --bg-secondary:     var(--c-bg-2);
+    --surface:          var(--c-surface);
+    --surface-elevated: var(--c-surface);
+
+    --text-primary:   var(--c-ink);
+    --text-secondary: var(--c-text-2);
+    --text-tertiary:  var(--c-text-3);
+
+    --gray-50:  var(--c-bg-2);
+    --gray-100: var(--c-surface-2);
+    --gray-200: var(--c-border);
+    --gray-300: var(--c-border-strong);
+}
+
+[data-theme="ledger"] {
+    --radius-sm:  0.25rem;
+    --radius-md:  0.25rem;
+    --radius-lg:  0.375rem;
+    --radius-xl:  0.5rem;
+    --radius-2xl: 0.5rem;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: 0 0 0 1px var(--c-ink);
+    --shadow-2xl: 0 0 0 1px var(--c-ink);
+}
+
+
+/* =====================================================================
+   3. GLOBAL FIXES
+   ===================================================================== */
+
+/* 3a. Focus — style.css has NO :focus-visible anywhere. */
+:where(a, button, input, select, textarea, summary,
+       [tabindex], [role="tab"], .tab, .faq-question):focus-visible {
+    outline: 3px solid var(--c-focus);
+    outline-offset: 2px;
+    border-radius: var(--r-1);
+}
+:where(.premium-footer, .cta-premium, .mission-section) :focus-visible {
+    outline-color: #ffffff;
+}
+
+/* 3b. Motion — infinite floats violate WCAG 2.2.2 and ignore user prefs. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* 3c. Overflow — minmax(320–450px) grids overflow a 360px phone
+       (360 − 2×24px gutter = 312px). min() caps them at the container. */
+.features-grid    { grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
+.analysis-cards   { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.approach-grid,
+.insights-grid    { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.dont-do-grid,
+.mission-values   { grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
+.app-community-grid { grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); }
+.faq-grid         { grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); }
+.container        { padding-inline: 1rem; }
+@media (min-width: 640px)  { .container { padding-inline: 1.5rem; } }
+@media (min-width: 1024px) { .container { padding-inline: 2rem; } }
+
+/* 3d. Class collisions in style.css
+       .bar is defined twice: the hero mini-chart's `flex: 1` leaks into the
+       stat-comparison bars and fights their inline widths. Scope both. */
+.bar { flex: initial; }
+.mini-chart .bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    background: var(--c-home);
+}
+
+/* 3e. Gradient text → solid. Gradient-clipped text disappears in Windows
+       High Contrast / forced-colors and reads as "hype". */
+.gradient-text,
+.big-stat .number,
+.showcase-number,
+.perf-number {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+}
+.gradient-text { color: var(--c-action); }
+
+/* 3e-2. Primary button: solid brand, no gradient. Calmer, and gradient
+         buttons fail contrast at their light end on some brand pairs. */
+.btn-premium.primary { background: var(--c-brand); color: var(--c-on-brand); }
+.btn-premium.primary:hover { background: var(--c-brand-hover); transform: none; box-shadow: var(--shadow-2); }
+
+/* 3f. Small-text contrast */
+.logo-sub    { color: var(--c-text-2); font-size: 0.75rem; }
+.info-note   { color: var(--c-text-2); font-style: normal; }
+.card-title, .card-label, .card-footer, .time-period, .match-date { color: var(--c-text-2); }
+
+/* 3g. Tap targets */
+.mobile-toggle {
+    min-width: var(--tap);
+    min-height: var(--tap);
+    align-items: center;
+    justify-content: center;
+}
+.nav-links.active .nav-link {
+    min-height: var(--tap);
+    display: flex;
+    align-items: center;
+}
+
+/* 3h. Utility */
+.sr-only {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
+}
+.tnum { font-variant-numeric: tabular-nums; font-family: var(--font-num); }
+
+
+/* =====================================================================
+   4. HERO
+   Mobile decisions:
+   - Orbs: 3 animated 500–600px blurred blobs → 1 static, small, faint.
+     (filter: blur(80px) on 3 huge layers is also the #1 scroll-jank cost
+     on low-end Android.)
+   - Floating cards: hidden < 1024px. They carry decorative data, and on
+     phones they push the CTA below the fold.
+   - Headline: 900 → 800 weight, balanced wrapping, ~36px floor.
+   - CTAs: full-width stacked, 48px tall, primary first.
+   - Stats: 3-column ruled grid (was wrapping flex + loose dividers).
+   Desktop (≥1024): cards become a STATIC 2-row grid. In the current
+   build card-2/3 physically cover card-1's "Arsenal" row and "Shots"
+   stat (visible in your screenshot).
+   ===================================================================== */
+.hero-premium {
+    min-height: auto;
+    padding: 6.5rem 0 3rem;
+}
+.hero-background { background: var(--c-bg); }
+
+.gradient-orb { animation: none; }
+.orb-2, .orb-3 { display: none; }
+.orb-1 {
+    width: 420px; height: 420px;
+    top: -240px; right: -200px;
+    opacity: 0.16;
+    filter: blur(60px);
+    background: var(--c-action);
+}
+
+.hero-content {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+}
+
+.hero-badge {
+    background: var(--c-brand-tint);
+    border: 1px solid transparent;
+    color: var(--c-brand);
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.hero-title {
+    font-size: clamp(2.25rem, 8vw + 0.5rem, 4.25rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    text-wrap: balance;
+    margin-bottom: 1rem;
+}
+
+.hero-description {
+    font-size: 1.0625rem;
+    color: var(--c-text-2);
+    margin-bottom: 2rem;
+}
+
+.hero-cta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+.hero-cta .btn-premium {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+}
+
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--c-border);
+}
+.hero-stats .stat-divider { display: none; }
+.hero-stats .stat-item {
+    text-align: left;
+    padding-inline: 1rem;
+    border-left: 1px solid var(--c-border);
+}
+.hero-stats > .stat-item:first-child { padding-left: 0; border-left: 0; }
+.hero-stats .stat-number {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    color: var(--c-ink);
+}
+.hero-stats .stat-label {
+    font-size: 0.8125rem;
+    color: var(--c-text-2);
+    font-weight: 500;
+}
+
+.hero-visual { display: none; }
+
+@media (min-width: 480px) {
+    .hero-cta { grid-template-columns: auto auto; justify-content: start; }
+    .hero-cta .btn-premium { width: auto; }
+}
+
+@media (min-width: 1024px) {
+    .hero-premium { padding: 8rem 0 5rem; }
+    .hero-content { grid-template-columns: 1.15fr 1fr; gap: 4rem; }
+
+    .hero-visual {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        height: auto;
+        align-content: center;
+    }
+    .floating-card {
+        position: static;
+        width: auto;
+        animation: none;
+        backdrop-filter: none;
+        padding: 1.25rem;
+        border-radius: var(--r-3);
+        border: 1px solid var(--c-border);
+        box-shadow: var(--shadow-2);
+    }
+    .card-1 { grid-column: 1 / -1; }
+    .card-value, .score {
+        font-family: var(--font-num);
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+/* The "LIVE" badge: keep it honest — see audit. If you keep a sample card,
+   relabel it <span class="card-badge sample">Sample</span>. */
+.card-badge.live   { background: var(--c-neg-bg); color: var(--c-neg-ink); }
+.card-badge.sample { background: var(--c-surface-2); color: var(--c-text-2); }
+
+
+/* =====================================================================
+   5. MATCH ANALYSIS CARD  (analysis.html)
+   Mobile decisions:
+   - Header: 16px padding (was 32/40). Date right-aligned, small.
+   - Teams: badge ABOVE name, centred, 48px badges, 17px names that can
+     wrap ("Borussia Mönchengladbach" breaks the old row layout).
+   - VS: 36px neutral circle — it's a separator, not a CTA.
+   - Tabs: 40px tall, horizontally scrollable with snap.
+   - Section headings become small uppercase labels so the DATA is the
+     loudest thing in each section.
+   - Form boxes / team news: 1 column, 2 from 640px.
+   - Stat bars: ONE diverging bar per stat meeting in the middle, 10px
+     tall, values on the outer ends. Away is neutral grey — the old
+     red `.bar.danger` implied the away team was "bad".
+   - Card no longer lifts on hover: it's a reading surface, not a link.
+   ===================================================================== */
+.analysis-notice-bar {
+    background: var(--c-draw-bg);
+    border-bottom: 1px solid var(--c-border-strong);
+    padding: 0.875rem 0;
+}
+.notice-content { align-items: flex-start; gap: 0.75rem; }
+.notice-content svg { color: var(--c-draw); margin-top: 2px; }
+.notice-content p { color: var(--c-draw-ink); font-size: 0.875rem; }
+
+.match-analysis-section { padding: 2rem 0 3rem; }
+
+.match-card-premium {
+    border-radius: var(--r-3);
+    border: 1px solid var(--c-border);
+    box-shadow: var(--shadow-1);
+    margin-bottom: 1.5rem;
+}
+.match-card-premium:hover {
+    transform: none;
+    box-shadow: var(--shadow-1);
+}
+
+.match-card-header {
+    padding: 0.875rem 1rem;
+    gap: 0.75rem;
+    background: var(--c-surface);
+}
+.league-badge {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    border-radius: 999px;
+}
+.match-time .date { font-size: 0.8125rem; }
+.match-time .time { font-size: 0.75rem; color: var(--c-text-2); }
+
+.match-teams-display {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem;
+    background: var(--c-bg-2);
+    border-block: 1px solid var(--c-border);
+    align-items: start;
+}
+.vs-badge { align-self: center; }
+.team-display,
+.team-display.away {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.625rem;
+    min-width: 0;
+}
+.match-teams-display .team-badge {
+    width: 48px; height: 48px;
+    font-size: 1.75rem;
+    border-radius: var(--r-2);
+    border: 1px solid var(--c-border);
+    box-shadow: none;
+}
+.team-info { min-width: 0; }
+.team-info h3 {
+    font-size: 1.0625rem;
+    line-height: 1.25;
+    margin-bottom: 0.125rem;
+    overflow-wrap: anywhere;
+}
+.team-location { font-size: 0.75rem; color: var(--c-text-2); }
+
+.vs-badge {
+    width: 36px; height: 36px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: var(--c-surface);
+    color: var(--c-text-2);
+    border: 1px solid var(--c-border-strong);
+    box-shadow: none;
+}
+
+.analysis-tabs {
+    padding: 0.5rem 1rem;
+    gap: 0.25rem;
+    background: var(--c-surface);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+.analysis-tabs::-webkit-scrollbar { display: none; }
+.tab {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.875rem;
+    border-radius: var(--r-1);
+    font-size: 0.875rem;
+    color: var(--c-text-2);
+    background: none;
+    border: 0;
+    font-family: inherit;
+    scroll-snap-align: start;
+}
+.tab.active,
+.tab[aria-selected="true"] {
+    background: var(--c-brand);
+    color: var(--c-on-brand);
+}
+
+.analysis-content-section { padding: 1.5rem 1rem; }
+.analysis-content-section h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--c-text-2);
+    margin-bottom: 1rem;
+}
+
+/* Form comparison */
+.form-comparison-modern,
+.team-news-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+.team-form-box {
+    padding: 1rem;
+    border-radius: var(--r-2);
+    background: var(--c-surface);
+}
+.team-name { font-size: 1rem; margin-bottom: 0.75rem; }
+.form-pills { gap: 0.375rem; margin-bottom: 0.875rem; }
+.pill {
+    width: 2rem; height: 2rem;
+    font-size: 0.8125rem;
+    border-radius: var(--r-1);
+}
+.pill.win  { background: var(--c-pos); }
+.pill.draw { background: var(--c-draw); }
+.pill.loss { background: var(--c-neg); }
+/* Most recent match ringed. ASSUMES newest is LAST in your markup —
+   swap to :first-child if your JS renders newest first. */
+.form-pills .pill:last-child {
+    box-shadow: 0 0 0 2px var(--c-surface), 0 0 0 4px var(--c-ink);
+}
+.form-stats {
+    gap: 0.5rem 1rem;
+    padding-top: 0.75rem;
+    flex-wrap: wrap;
+}
+.form-stats .stat-item {           /* .stat-item collided with hero's centred version */
+    text-align: left;
+    font-size: 0.8125rem;
+    color: var(--c-text-2);
+}
+.form-stats .stat-item strong {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+}
+
+/* Diverging stat bars */
+.stats-comparison { gap: 1.125rem; }
+.stat-row { gap: 0.375rem; }
+.stat-row .stat-label {
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--c-text-2);
+    margin: 0;
+}
+.stat-bars {
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+}
+.bar-container { gap: 0.5rem; min-width: 0; }
+.bar-container.left  { justify-content: flex-end; }
+.bar-container.right { justify-content: flex-start; }
+.bar-container.left  .value { order: 0; text-align: left; margin-right: auto; }
+.bar-container.left  .bar   { order: 1; }
+.bar-container.right .bar   { order: 0; }
+.bar-container.right .value { order: 1; text-align: right; margin-left: auto; }
+
+.stat-bars .bar {
+    height: 10px;
+    min-width: 2px;
+    max-width: calc(100% - 3rem);   /* always leaves room for the number */
+    background: var(--c-home);
+    border-radius: 3px 0 0 3px;
+}
+.stat-bars .bar-container.right .bar,
+.stat-bars .bar.danger {
+    background: var(--c-away);
+    border-radius: 0 3px 3px 0;
+}
+.bar-container .value {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9375rem;
+    min-width: 2.5rem;
+}
+
+/* Team news */
+.news-box {
+    padding: 1rem;
+    background: var(--c-surface);
+    border-radius: var(--r-2);
+}
+.news-box h5 { font-size: 1rem; margin-bottom: 0.75rem; }
+.news-list { gap: 0.625rem; }
+.news-list li { font-size: 0.9375rem; color: var(--c-text-2); }
+.news-list .label { color: var(--c-ink); }
+
+/* Summary box */
+.analysis-summary-box {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem 1rem;
+    background: var(--c-brand-tint);
+    border-top: 1px solid var(--c-border);
+}
+.summary-icon { display: none; }
+.summary-content h4 { font-size: 1.0625rem; margin-bottom: 0.5rem; }
+.summary-content p { font-size: 1rem; color: var(--c-ink); }
+.summary-note {
+    background: var(--c-surface);
+    border-left: 3px solid var(--c-control);
+    border-radius: var(--r-1);
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    color: var(--c-text-2);
+    margin: 0;
+}
+
+/* Disclaimer banner under the cards */
+.disclaimer-banner {
+    padding: 1.25rem;
+    border-width: 1px;
+    border-radius: var(--r-3);
+    background: var(--c-neg-bg);
+}
+.disclaimer-content { flex-direction: column; gap: 0.75rem; }
+.disclaimer-content h4 { font-size: 1.125rem; }
+.disclaimer-content p { color: var(--c-neg-ink); font-size: 0.9375rem; }
+
+@media (min-width: 640px) {
+    .form-comparison-modern,
+    .team-news-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 768px) {
+    .match-card-header { padding: 1.25rem 2rem; }
+    .match-teams-display { padding: 2rem; gap: 1.5rem; }
+    .team-display { flex-direction: row; text-align: left; gap: 1rem; }
+    .team-display.away { flex-direction: row-reverse; text-align: right; }
+    .match-teams-display .team-badge { width: 64px; height: 64px; font-size: 2.25rem; }
+    .team-info h3 { font-size: 1.5rem; }
+    .vs-badge { width: 44px; height: 44px; font-size: 0.75rem; }
+    .analysis-tabs { padding: 0.75rem 2rem; }
+    .analysis-content-section { padding: 2rem; }
+    .stats-comparison { max-width: 640px; margin-inline: auto; }
+    .analysis-summary-box { flex-direction: row; padding: 2rem; gap: 1.25rem; }
+    .summary-icon {
+        display: flex;
+        width: 44px; height: 44px;
+        font-size: 1.25rem;
+        background: var(--c-brand);
+        border-radius: var(--r-2);
+    }
+    .disclaimer-banner { padding: 2rem; }
+    .disclaimer-content { flex-direction: row; gap: 1.5rem; }
+}
+
+
+/* =====================================================================
+   6. RESULTS TABLE  (results.html)
+   Mobile decision: the table becomes a stack of record cards — no
+   horizontal scroll. Each card:
+       ┌──────────────────────────────────────┐
+       │ Jan 18                    ● Aligned  │  ← date + outcome on one line
+       │ Man City  vs  Arsenal               │  ← match, full width, bold
+       │ SCORE ............................ 2–1 │  ← every other column as
+       │ ANALYSIS LEAN ............... Home win│     label/value rows
+       └──────────────────────────────────────┘
+   Left edge stripe = outcome; aligned/unexpected also differ by SHAPE
+   (filled vs hollow dot) so colour is never the only signal.
+   Labels come from data-label on each <td> — the 10-line script in
+   lsa-results-table.js fills them from your <thead>, so no hand edits.
+   From 768px it's a normal table again with a sticky header.
+   ===================================================================== */
+.results-table-section { padding: 2rem 0 3rem; }
+
+.results-table-container {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+}
+.results-table-modern,
+.results-table-modern tbody { display: block; }
+.results-table-modern thead {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+.results-table-modern tbody {
+    display: grid;
+    gap: 0.75rem;
+}
+.results-table-modern tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-left-width: 4px;
+    border-radius: var(--r-2);
+}
+.results-table-modern tbody tr:hover { background: var(--c-surface); }
+.results-table-modern tbody tr:has(.outcome-pill.aligned)    { border-left-color: var(--c-pos); }
+.results-table-modern tbody tr:has(.outcome-pill.unexpected) { border-left-color: var(--c-miss); }
+
+.results-table-modern td {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--c-border);
+    font-size: 0.9375rem;
+    color: var(--c-ink);
+    text-align: right;
+}
+.results-table-modern td::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-text-2);
+    text-align: left;
+}
+
+/* Promote date + outcome to the card's top line, match to line 2 */
+.results-table-modern td:has(.date-badge) {
+    grid-column: 1; grid-row: 1;
+    border-top: 0; padding: 0;
+    justify-content: flex-start;
+}
+.results-table-modern td:has(.outcome-pill) {
+    grid-column: 2; grid-row: 1;
+    border-top: 0; padding: 0;
+    justify-content: flex-end;
+}
+.results-table-modern td:has(.match-cell) {
+    grid-row: 2;
+    border-top: 0;
+    padding: 0.5rem 0 0.625rem;
+    justify-content: flex-start;
+    text-align: left;
+}
+.results-table-modern td:has(.date-badge)::before,
+.results-table-modern td:has(.outcome-pill)::before,
+.results-table-modern td:has(.match-cell)::before { display: none; }
+
+.date-badge {
+    padding: 0;
+    background: none;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--c-text-2);
+    font-variant-numeric: tabular-nums;
+}
+.match-cell { flex-wrap: wrap; gap: 0.375rem; font-size: 1rem; }
+.match-cell .team { font-weight: 700; padding: 0; }
+.match-cell .vs { margin: 0; color: var(--c-text-2); }
+
+.score-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--r-1);
+    background: var(--c-surface-2);
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+.outcome-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    border-radius: 999px;
+}
+.outcome-pill::before {
+    content: "";
+    width: 0.5rem; height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+.outcome-pill.aligned    { background: var(--c-pos-bg);  color: var(--c-pos-ink); }
+.outcome-pill.unexpected { background: var(--c-miss-bg); color: var(--c-miss-ink); }
+.outcome-pill.unexpected::before {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px currentColor;
+}
+
+.table-note {
+    margin-top: 1rem;
+    padding: 0;
+    background: none;
+    border: 0;
+}
+.table-note p { font-size: 0.875rem; color: var(--c-text-2); }
+
+@media (min-width: 768px) {
+    .results-table-container {
+        background: var(--c-surface);
+        border: 1px solid var(--c-border);
+        border-radius: var(--r-3);
+        box-shadow: var(--shadow-1);
+        overflow: clip;
+    }
+    .results-table-modern { display: table; }
+    .results-table-modern thead {
+        position: static;
+        width: auto; height: auto;
+        overflow: visible; clip: auto;
+        display: table-header-group;
+        background: var(--c-bg-2);
+        color: var(--c-text-2);
+    }
+    .results-table-modern th {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.75rem;
+        color: var(--c-text-2);
+        background: var(--c-bg-2);
+        border-bottom: 1px solid var(--c-border-strong);
+    }
+    .results-table-modern tbody { display: table-row-group; }
+    .results-table-modern tbody tr {
+        display: table-row;
+        padding: 0;
+        border: 0;
+        border-bottom: 1px solid var(--c-border);
+        border-radius: 0;
+        background: none;
+    }
+    .results-table-modern tbody tr:hover { background: var(--c-bg-2); }
+    .results-table-modern td,
+    .results-table-modern td:has(.date-badge),
+    .results-table-modern td:has(.outcome-pill),
+    .results-table-modern td:has(.match-cell) {
+        display: table-cell;
+        padding: 0.875rem 1.25rem;
+        border-top: 0;
+        text-align: left;
+        vertical-align: middle;
+    }
+    .results-table-modern td::before { display: none; }
+    .results-table-modern tr:has(.outcome-pill.aligned)    td:first-child { box-shadow: inset 3px 0 0 var(--c-pos); }
+    .results-table-modern tr:has(.outcome-pill.unexpected) td:first-child { box-shadow: inset 3px 0 0 var(--c-miss); }
+    .table-note {
+        margin: 0;
+        padding: 1rem 1.25rem;
+        background: var(--c-bg-2);
+        border-top: 1px solid var(--c-border);
+    }
+}
+
+
+/* =====================================================================
+   7. PERFORMANCE STAT CARDS
+   Mobile decisions:
+   - 2×2 grid (4-up at 768+). Left-aligned: label on top, number below —
+     the eye scans a column of numbers, not centred islands.
+   - Emoji icons hidden: decoration that costs 56px of height each.
+   - Solid ink numbers, tabular figures — no gradient text.
+   - "Aligned" and "Unexpected" get equal visual weight: same card, same
+     size, only a 3px top rule differs. The old .warning card in orange
+     made misses look like an alert; they're a published statistic.
+   - Cards don't lift on hover (they aren't clickable).
+   Optional: .perf-split — a proportion bar showing aligned vs unexpected
+   out of the total, so the denominator is never hidden.
+   ===================================================================== */
+.performance-overview { padding: 2.5rem 0; }
+
+.performance-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+.perf-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    text-align: left;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-2);
+}
+.perf-card:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--c-border);
+}
+.perf-card.success,
+.perf-card.warning {
+    background: var(--c-surface);
+    border-color: var(--c-border);
+}
+.perf-card.success { box-shadow: inset 0 3px 0 var(--c-pos); }
+.perf-card.warning { box-shadow: inset 0 3px 0 var(--c-miss); }
+
+.perf-icon { display: none; }
+.perf-label {
+    order: -1;
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--c-text-2);
+}
+.perf-number,
+.perf-card.success .perf-number,
+.perf-card.warning .perf-number {
+    margin: 0;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--c-ink);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+}
+.perf-period { font-size: 0.75rem; color: var(--c-text-3); }
+
+.perf-split {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 2px;
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.perf-split > span { flex-grow: var(--n, 1); }
+.perf-split__aligned    { background: var(--c-pos); }
+.perf-split__unexpected { background: var(--c-miss); }
+
+/* Trust-section card on the homepage uses the same rules */
+.big-stat .number,
+.mini-stat-box .value {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+}
+.big-stat .label,
+.mini-stat-box .label { color: var(--c-text-2); }
+.stats-card { padding: 1.5rem; border-radius: var(--r-3); box-shadow: var(--shadow-2); }
+.mini-stats-grid { gap: 0.5rem; }
+.mini-stat-box { padding: 0.75rem 0.5rem; }
+
+@media (min-width: 768px) {
+    .performance-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+    .perf-card { padding: 1.5rem; }
+    .stats-card { padding: 2.25rem; }
+}
+
+
+/* =====================================================================
+   8. FORMS  (contact.html)
+   Mobile decisions:
+   - Single column always below 640px; 48px controls; 16px input text
+     (anything smaller makes iOS Safari zoom on focus).
+   - Labels above fields, never placeholder-as-label.
+   States (all work without a backend):
+     default · hover · focus · invalid · valid · disabled · busy
+     + .form-message.success / .error / .info banners.
+   Invalid triggers on ANY of:
+     .form-group.is-invalid   (set by your JS)
+     [aria-invalid="true"]    (set by your JS — also tells screen readers)
+     :user-invalid            (native, after the user has interacted)
+   ===================================================================== */
+.contact-section { padding: 2rem 0 3rem; }
+.contact-grid { gap: 2rem; }
+
+.premium-form {
+    padding: 1.25rem;
+    border-radius: var(--r-3);
+    border: 1px solid var(--c-border);
+    box-shadow: none;
+}
+.form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 0;
+}
+.form-group { margin-bottom: 1.25rem; }
+.form-group label {
+    font-size: 0.875rem;
+    margin-bottom: 0.375rem;
+    color: var(--c-ink);
+}
+.form-hint {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--c-text-2);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    min-height: 48px;
+    padding: 0.75rem 0.875rem;
+    font-size: 1rem;
+    color: var(--c-ink);
+    background: var(--c-surface);
+    border: 1px solid var(--c-control);
+    border-radius: var(--r-1);
+    box-shadow: none;
+    transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
+}
+:is(.form-input, .form-textarea)::placeholder { color: var(--c-text-3); opacity: 1; }
+:is(.form-input, .form-select, .form-textarea):hover { border-color: var(--c-ink); }
+:is(.form-input, .form-select, .form-textarea):focus {
+    outline: none;
+    border-color: var(--c-focus);
+    box-shadow: inset 0 0 0 1px var(--c-focus), 0 0 0 4px var(--c-focus-halo);
+}
+.form-select {
+    appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+}
+.form-textarea { min-height: 140px; }
+
+/* Invalid */
+.form-group.is-invalid :is(.form-input, .form-select, .form-textarea),
+:is(.form-input, .form-select, .form-textarea)[aria-invalid="true"],
+:is(.form-input, .form-select, .form-textarea):user-invalid {
+    border-color: var(--c-neg);
+    box-shadow: inset 0 0 0 1px var(--c-neg);
+}
+.form-group.is-invalid :is(.form-input, .form-select, .form-textarea):focus,
+:is(.form-input, .form-select, .form-textarea)[aria-invalid="true"]:focus,
+:is(.form-input, .form-select, .form-textarea):user-invalid:focus {
+    box-shadow: inset 0 0 0 1px var(--c-neg), 0 0 0 4px rgb(185 28 28 / 0.18);
+}
+.form-group.is-invalid label { color: var(--c-neg-ink); }
+
+.form-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--c-neg);
+}
+.form-error:empty { display: none; }
+.form-error::before {                       /* icon so error isn't colour-only */
+    content: "!";
+    content: "!" / "";
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1rem; height: 1rem;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: var(--c-neg);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 800;
+}
+
+/* Valid (only show after the user has finished a field — not on load) */
+.form-group.is-valid :is(.form-input, .form-select, .form-textarea) {
+    border-color: var(--c-pos);
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23047857' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 8.5 3.5 3.5L13 5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+}
+
+/* Disabled */
+:is(.form-input, .form-select, .form-textarea):disabled {
+    background: var(--c-surface-2);
+    color: var(--c-text-2);
+    border-color: var(--c-border-strong);
+    cursor: not-allowed;
+}
+
+/* Checkbox — style.css styles it but never sets appearance:none,
+   so the :checked background never rendered. */
+.form-group .checkbox-container {       /* `.form-group label {display:block}` was stacking it */
+    display: flex;
+    min-height: var(--tap);
+    gap: 0.75rem;
+    font-weight: 400;
+}
+.form-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    display: grid;
+    place-content: center;
+    width: 22px; height: 22px;
+    margin-top: 1px;
+    background: var(--c-surface);
+    border: 1.5px solid var(--c-control);
+    border-radius: 0.3rem;
+}
+.form-checkbox::before {
+    content: "";
+    width: 12px; height: 12px;
+    background: var(--c-on-brand);
+    clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 22%, 86% 8%, 38% 72%);
+    transform: scale(0);
+    transition: transform 120ms;
+}
+.form-checkbox:checked { background: var(--c-brand); border-color: var(--c-brand); }
+.form-checkbox:checked::before { transform: scale(1); }
+.form-checkbox[aria-invalid="true"],
+.form-group.is-invalid .form-checkbox { border-color: var(--c-neg); }
+
+/* Submit button */
+.premium-form .btn-premium {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+}
+.btn-premium:disabled,
+.btn-premium[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+.btn-premium[aria-busy="true"] { pointer-events: none; }
+.btn-premium[aria-busy="true"] svg { display: none; }
+.btn-premium[aria-busy="true"]::after {
+    content: "";
+    width: 1em; height: 1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: lsa-spin 0.7s linear infinite;
+}
+@keyframes lsa-spin { to { transform: rotate(360deg); } }
+
+/* Status banners — put role="status" (success/info) or role="alert"
+   (error) on .form-message so screen readers announce it. */
+.form-message {
+    display: none;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-top: 1.25rem;
+    padding: 0.875rem 1rem;
+    font-size: 0.9375rem;
+    border: 1px solid;
+    border-left-width: 4px;
+    border-radius: var(--r-2);
+}
+.form-message.success { display: block; background: var(--c-pos-bg);   color: var(--c-pos-ink); border-color: var(--c-pos); }
+.form-message.error   { display: block; background: var(--c-neg-bg);   color: var(--c-neg-ink); border-color: var(--c-neg); }
+.form-message.info    { display: block; background: var(--c-brand-tint); color: var(--c-ink);   border-color: var(--c-action); }
+
+/* Contact info cards: not interactive, no lift */
+.info-card { padding: 1.25rem; border-radius: var(--r-3); }
+.info-card:hover { transform: none; box-shadow: none; }
+
+@media (min-width: 640px) {
+    .premium-form { padding: 2rem; }
+    .form-row { grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .premium-form .btn-premium { width: auto; }
+    .info-card { padding: 1.75rem; }
+}
+
+
+/* =====================================================================
+   9. DIRECTION B — "LEDGER" overrides
+   Only what tokens can't express on their own.
+   ===================================================================== */
+[data-theme="ledger"] .premium-nav {
+    background: color-mix(in srgb, var(--c-bg) 92%, transparent);
+    border-bottom: 1px solid var(--c-ink);
+}
+[data-theme="ledger"] :is(.logo-icon, .card-icon, .point-icon, .approach-icon,
+                           .info-icon, .summary-icon, .card-icon-large) {
+    background: var(--c-ink);
+    box-shadow: none;
+}
+
+/* Ruled-paper hero instead of orbs */
+[data-theme="ledger"] .gradient-orb { display: none; }
+[data-theme="ledger"] .hero-background {
+    background:
+        repeating-linear-gradient(to bottom, transparent 0 31px, var(--c-border) 31px 32px),
+        var(--c-bg);
+    -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 95%);
+            mask-image: linear-gradient(to bottom, #000 30%, transparent 95%);
+}
+[data-theme="ledger"] .hero-title { font-weight: 800; letter-spacing: -0.045em; }
+[data-theme="ledger"] .gradient-text {
+    color: var(--c-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--c-action);
+    text-decoration-thickness: 0.09em;
+    text-underline-offset: 0.12em;
+}
+
+/* Mono uppercase "instrument labels" */
+[data-theme="ledger"] :is(.hero-badge, .section-badge, .card-tag, .league-badge,
+                           .perf-label, .stat-row .stat-label, .hero-stats .stat-label,
+                           .analysis-content-section h4, .results-table-modern th,
+                           .results-table-modern td::before, .date-badge, .outcome-pill,
+                           .match-time .time, .perf-period) {
+    font-family: var(--font-num);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+[data-theme="ledger"] :is(.hero-badge, .section-badge) {
+    background: transparent;
+    border: 1px solid var(--c-ink);
+    color: var(--c-ink);
+    border-radius: var(--r-1);
+}
+[data-theme="ledger"] .hero-badge .badge-icon { display: none; }
+[data-theme="ledger"] :is(.card-tag, .league-badge) {
+    background: transparent;
+    border: 1px solid var(--c-border-strong);
+    color: var(--c-ink);
+    border-radius: var(--r-1);
+}
+
+/* Numbers: mono, tight */
+[data-theme="ledger"] :is(.stat-number, .perf-number, .big-stat .number,
+                           .mini-stat-box .value, .card-value, .score,
+                           .bar-container .value, .score-badge) {
+    font-family: var(--font-num);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+}
+
+/* Buttons: ink slabs */
+[data-theme="ledger"] .btn-premium { border-radius: var(--r-1); }
+[data-theme="ledger"] .btn-premium.primary {
+    background: var(--c-ink);
+    color: var(--c-on-brand);
+    box-shadow: none;
+}
+[data-theme="ledger"] .btn-premium.primary:hover {
+    background: var(--c-action);
+    transform: none;
+    box-shadow: none;
+}
+[data-theme="ledger"] .btn-premium.secondary {
+    background: transparent;
+    color: var(--c-ink);
+    border-color: var(--c-ink);
+}
+[data-theme="ledger"] .btn-premium.secondary:hover { background: var(--c-surface-2); }
+[data-theme="ledger"] :is(.cta-premium, .mission-section) { background: var(--c-ink); }
+
+/* Cards: hairlines, no lift */
+[data-theme="ledger"] :is(.feature-card, .analysis-card, .approach-card,
+                           .insight-card, .showcase-item):hover {
+    transform: none;
+    border-color: var(--c-ink);
+}
+[data-theme="ledger"] .analysis-card::before { background: var(--c-action); }
+
+/* Perf cards: one continuous ledger strip with hairline cells */
+[data-theme="ledger"] .performance-grid {
+    gap: 1px;
+    background: var(--c-ink);
+    border: 1px solid var(--c-ink);
+    border-radius: var(--r-2);
+    overflow: hidden;
+}
+[data-theme="ledger"] .perf-card,
+[data-theme="ledger"] .perf-card.success,
+[data-theme="ledger"] .perf-card.warning {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+[data-theme="ledger"] .perf-card.success .perf-number { color: var(--c-pos); }
+[data-theme="ledger"] .perf-card.warning .perf-number { color: var(--c-miss); }
+[data-theme="ledger"] .perf-split { border-radius: 0; height: 6px; }
+
+/* Results: misses printed in the loudest colour on the page */
+[data-theme="ledger"] .outcome-pill { border-radius: var(--r-1); }
+[data-theme="ledger"] .outcome-pill.aligned {
+    background: transparent;
+    color: var(--c-pos-ink);
+    box-shadow: inset 0 0 0 1px currentColor;
+}
+[data-theme="ledger"] .outcome-pill.unexpected {
+    background: var(--c-miss);
+    color: #ffffff;
+}
+[data-theme="ledger"] .outcome-pill.unexpected::before { box-shadow: inset 0 0 0 2px #fff; }
+[data-theme="ledger"] .results-table-modern tbody tr { border-radius: var(--r-1); }
+
+/* Analysis card */
+[data-theme="ledger"] .pill { border-radius: 2px; }
+[data-theme="ledger"] .stat-bars .bar { height: 6px; border-radius: 0; }
+[data-theme="ledger"] .analysis-summary-box {
+    background: var(--c-surface);
+    border-top: 2px solid var(--c-ink);
+}
+[data-theme="ledger"] .vs-badge { border-radius: var(--r-1); border-color: var(--c-ink); color: var(--c-ink); }
+[data-theme="ledger"] .tab.active,
+[data-theme="ledger"] .tab[aria-selected="true"] { border-radius: var(--r-1); }
+
+/* Forms */
+[data-theme="ledger"] .premium-form { border-color: var(--c-ink); }
+[data-theme="ledger"] .form-checkbox { border-radius: 2px; }

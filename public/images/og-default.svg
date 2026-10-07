@@ -1,0 +1,29 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="78%" cy="18%" r="60%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0b1220"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Brand mark -->
+  <image href="icon-mark-real.png" x="84" y="76" width="88" height="88"/>
+
+  <text x="192" y="146" font-family="Arial, sans-serif" font-size="44" font-weight="700" letter-spacing="-1" fill="#ffffff">LSA</text>
+
+  <text x="88" y="280" font-family="Arial, sans-serif" font-size="68" font-weight="700" letter-spacing="-2" fill="#ffffff">Football analysis</text>
+  <text x="88" y="356" font-family="Arial, sans-serif" font-size="68" font-weight="700" letter-spacing="-2" fill="#9aa6bd">that shows its work.</text>
+
+  <text x="88" y="420" font-family="Arial, sans-serif" font-size="26" fill="#9aa6bd">Expected goals, form, head-to-head and team news —</text>
+  <text x="88" y="456" font-family="Arial, sans-serif" font-size="26" fill="#9aa6bd">every result published, hits and misses alike.</text>
+
+  <rect x="86" y="522" width="2" height="36" fill="#ffffff" fill-opacity="0.18"/>
+  <text x="112" y="548" font-family="Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="3" fill="#7aa2ff">LEGIT SOURCE ANALYSIS</text>
+</svg>

@@ -9,3 +9,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('/sync/predictions', [PredictionSyncController::class, 'store'])
     ->middleware('verify.sync-key')
     ->name('api.sync.predictions');
+
+// One-time maintenance action — see PredictionSyncController::fixKickoffTimezone.
+Route::post('/sync/fix-kickoff-timezone', [PredictionSyncController::class, 'fixKickoffTimezone'])
+    ->middleware('verify.sync-key')
+    ->name('api.sync.fix-kickoff-timezone');

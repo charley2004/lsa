@@ -87,4 +87,23 @@ class PredictionSyncController extends Controller
 
         return response()->json(['created' => $created, 'updated' => $updated]);
     }
+
+    // One-time maintenance action: every row synced before the kickoff-timezone
+    // fix (agent/export.py's _kickoff_to_utc_iso) has a kickoff stored exactly
+    // one hour later than reality (app.timezone=UTC misreading a tz-less
+    // WAT/UTC+1 wall-clock string as if it were already UTC). A targeted
+    // correction, not a delete — shifts every stored kickoff back by the exact
+    // known error, so existing rows stay intact and line up with corrected
+    // future syncs instead of becoming unmatchable duplicates. Meant to be
+    // called exactly once by hand; calling it again would shift already-
+    // corrected rows a further hour wrong, so it's deliberately not wired into
+    // any routine sync path.
+    public function fixKickoffTimezone(Request $request)
+    {
+        $hours = (float) $request->input('hours', 1);
+        $affected = Prediction::query()
+            ->update(['kickoff' => DB::raw("datetime(kickoff, '-{$hours} hours')")]);
+
+        return response()->json(['corrected' => $affected, 'shifted_hours' => $hours]);
+    }
 }

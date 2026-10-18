@@ -183,7 +183,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .brand--light .brand__name { color: #fff; }
 .brand--light .brand__sub  { color: var(--dark-muted); }
 
-.nav__links, .nav__cta { display: none; }
+.nav__links, .nav__cta, .nav__telegram { display: none; }
 
 .nav__toggle {
     position: relative;
@@ -246,6 +246,7 @@ html.menu-open { overflow: hidden; }
         border-radius: 50%; background: var(--accent);
     }
     .nav__cta { display: inline-flex; }
+    .nav__telegram { display: inline-flex; align-items: center; gap: 6px; }
     .nav__toggle, .menu { display: none; }
 }
 

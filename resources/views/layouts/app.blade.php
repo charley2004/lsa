@@ -6,6 +6,7 @@
         $pageDescription = trim($__env->yieldContent('description', 'Data-driven football match analysis. Expected goals, form, head-to-head and team news — with every result published, hits and misses alike.'));
         $canonicalUrl = url()->current();
         $ogImageUrl = asset('images/og-default.png');
+        $telegramUrl = 'https://t.me/+8Khvrbv71dZkNTc0';
     @endphp
 
     <meta charset="utf-8">
@@ -53,6 +54,7 @@
                     'alternateName' => 'LEGIT SOURCE ANALYSIS',
                     'url' => url('/'),
                     'logo' => asset('images/icon-512.png'),
+                    'sameAs' => [$telegramUrl],
                 ],
                 [
                     '@type' => 'WebSite',
@@ -107,6 +109,11 @@
             @endforeach
         </nav>
 
+        <a class="btn btn--ghost btn--sm nav__telegram" href="{{ $telegramUrl }}" rel="noopener" target="_blank" aria-label="Join LSA on Telegram">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.05 3.56 17.9 19.33c-.24 1.07-.87 1.33-1.76.83l-4.86-3.58-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.94L17.3 6.1c.38-.34-.08-.53-.59-.19L8.3 11.14l-4.87-1.52c-1.06-.33-1.08-1.06.22-1.57L19.7 2.26c.88-.33 1.65.2 1.35 1.3z"/></svg>
+            <span>Telegram</span>
+        </a>
+
         <a class="btn btn--primary btn--sm nav__cta" href="{{ route('analysis') }}">Latest analysis
             <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
@@ -121,7 +128,8 @@
     @foreach ($navItems as $i => [$route, $label])
         <a href="{{ route($route) }}" style="--i:{{ $i }}" @if (request()->routeIs($route)) aria-current="page" @endif>{{ $label }} <span class="num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span></a>
     @endforeach
-    <p class="menu__note" style="--i:{{ count($navItems) }}">Educational analysis only. Not betting advice. 18+</p>
+    <a href="{{ $telegramUrl }}" rel="noopener" target="_blank" style="--i:{{ count($navItems) }}">Join on Telegram <span class="num">{{ str_pad(count($navItems) + 1, 2, '0', STR_PAD_LEFT) }}</span></a>
+    <p class="menu__note" style="--i:{{ count($navItems) + 1 }}">Educational analysis only. Not betting advice. 18+</p>
 </div>
 
 <main id="main">
@@ -149,6 +157,7 @@
                 <a href="{{ route('contact') }}">Contact</a>
                 <a href="{{ route('disclaimer') }}">Disclaimer</a>
                 <a href="{{ route('privacy') }}">Privacy Policy</a>
+                <a href="{{ $telegramUrl }}" rel="noopener" target="_blank">Telegram</a>
             </nav>
             <div class="footer__notice">
                 <h3>Important</h3>

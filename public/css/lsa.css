@@ -1085,9 +1085,14 @@ html.menu-open { overflow: hidden; }
 
 /* ---------- P4. Results page ---------- */
 .ledger-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.filters { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft); }
+.filters {
+    display: inline-flex; max-width: 100%; min-width: 0;
+    padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft);
+    overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.filters::-webkit-scrollbar { display: none; }
 .filter {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 6px; flex: none;
     height: 36px; padding: 0 12px;
     border: 0; border-radius: 8px; background: none; cursor: pointer;
     font-size: 0.8125rem; font-weight: 500; color: var(--text-2);

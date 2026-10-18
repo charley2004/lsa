@@ -6,7 +6,7 @@
 @section('content')
 
 <!-- ============ HERO ============ -->
-<section class="hero">
+<section class="hero" data-track-section="hero">
   <div class="hero__bg" aria-hidden="true">
     <div class="hero__grid"></div>
     <div class="hero__glow"></div>
@@ -148,7 +148,7 @@
 </section>
 
 <!-- ============ METHOD ============ -->
-<section class="section" id="method">
+<section class="section" id="method" data-track-section="method">
   <div class="container">
     <header class="section-head" data-reveal>
       <p class="kicker">Method</p>
@@ -186,7 +186,7 @@
 </section>
 
 <!-- ============ BREAKDOWNS ============ -->
-<section class="section section--soft" id="breakdowns">
+<section class="section section--soft" id="breakdowns" data-track-section="breakdowns">
   <div class="container">
     <header class="section-head section-head--split" data-reveal>
       <div>
@@ -232,7 +232,7 @@
 </section>
 
 <!-- ============ RECORD (dark) ============ -->
-<section class="section record" id="record">
+<section class="section record" id="record" data-track-section="record">
   <div class="record__bg" aria-hidden="true"></div>
   <div class="container record__inner">
     <div class="record__copy" data-reveal>
@@ -301,7 +301,7 @@
 </section>
 
 <!-- ============ CONNECT ============ -->
-<section class="section" id="connect">
+<section class="section" id="connect" data-track-section="connect">
   <div class="container">
     <header class="section-head section-head--center" data-reveal>
       <p class="kicker">Stay updated</p>
@@ -353,5 +353,7 @@
     </div>
   </div>
 </section>
+
+@include('partials.offers')
 
 @endsection

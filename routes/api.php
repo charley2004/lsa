@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\PredictionSyncController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,3 +15,13 @@ Route::post('/sync/predictions', [PredictionSyncController::class, 'store'])
 Route::post('/sync/fix-kickoff-timezone', [PredictionSyncController::class, 'fixKickoffTimezone'])
     ->middleware('verify.sync-key')
     ->name('api.sync.fix-kickoff-timezone');
+
+// First-party page/section tracking — called from public/js/analytics.js on
+// every page load and periodically while the page stays open. Throttled per
+// IP since these are public, unauthenticated endpoints.
+Route::post('/track/view', [AnalyticsController::class, 'view'])
+    ->middleware('throttle:120,1')
+    ->name('api.track.view');
+Route::post('/track/flush', [AnalyticsController::class, 'flush'])
+    ->middleware('throttle:120,1')
+    ->name('api.track.flush');

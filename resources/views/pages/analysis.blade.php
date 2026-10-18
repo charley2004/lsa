@@ -47,7 +47,7 @@
 @section('content')
 
     <!-- Page header -->
-    <section class="page-head">
+    <section class="page-head" data-track-section="page-head">
         <div class="hero__bg" aria-hidden="true"><div class="hero__grid"></div><div class="hero__glow"></div></div>
         <div class="container">
             <div class="page-head__inner">
@@ -72,7 +72,7 @@
     </div>
 
     <!-- Analysis cards -->
-    <section class="section section--soft">
+    <section class="section section--soft" data-track-section="fixtures">
         <div class="container">
 
             @if ($predictions->isEmpty())
@@ -199,5 +199,7 @@
             </div>
         </div>
     </section>
+
+@include('partials.offers')
 
 @endsection

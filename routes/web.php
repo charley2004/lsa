@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AnalysisController;
+use App\Http\Controllers\BookmakerOfferController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ResultsController;
@@ -22,3 +23,6 @@ Route::post('/contact', [ContactController::class, 'store'])
 
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+
+// Affiliate click-through — counts the click, then redirects to the real bookmaker URL.
+Route::get('/go/{slug}', [BookmakerOfferController::class, 'go'])->name('offer.go');

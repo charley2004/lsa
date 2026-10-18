@@ -43,7 +43,7 @@
     <!-- Structured data -->
     <script type="application/ld+json">
         {!! json_encode([
-            '@context' => 'https://schema.org',
+            '@@context' => 'https://schema.org',
             '@graph' => [
                 [
                     '@type' => 'Organization',
@@ -77,6 +77,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/lsa.css') }}">
     <script src="{{ asset('js/lsa.js') }}" defer></script>
+    <script src="{{ asset('js/analytics.js') }}" defer></script>
     @stack('head')
 </head>
 <body>
@@ -151,7 +152,7 @@
             </nav>
             <div class="footer__notice">
                 <h3>Important</h3>
-                <p>LSA publishes educational football analysis. It is not betting advice and does not guarantee any outcome. 18+ only. If gambling stops being fun, stop and seek support.</p>
+                <p>LSA publishes educational football analysis. It is not betting advice and does not guarantee any outcome. Some links on this site are affiliate links — we may earn a commission if you sign up through them, at no extra cost to you, and this never affects which fixtures we analyse or how we report results. 18+ only. If gambling stops being fun, stop and seek support at <a href="https://www.begambleaware.org" rel="noopener" target="_blank">BeGambleAware.org</a>.</p>
             </div>
         </div>
         <div class="footer__bottom">

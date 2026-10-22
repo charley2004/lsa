@@ -177,7 +177,7 @@
                                                 @endif
                                             </dl>
                                             @if ($p->odds === null)
-                                                <p class="read__odds-note">No bookmaker price available for this specific market — odds are only shown for 1X2 and Over/Under 2.5 picks, where we have a real price to compare against.</p>
+                                                <p class="read__odds-note">No bookmaker price available for this specific market — we show real odds for 1X2, Double Chance, BTTS and Over/Under goal lines where a price exists, but corners, cards and Asian handicap picks aren't priced on the books we read.</p>
                                             @endif
 
                                             <div class="read__notes">

@@ -110,7 +110,7 @@
                                 @endphp
                                 <article class="acard" data-reveal>
                                     <header class="acard__top">
-                                        <span class="chip">{{ $p->league ?? 'Football' }}</span>
+                                        <span class="chip">{{ $p->leagueLabel() }}</span>
                                         <span class="acard__kick num">
                                             <b>{{ $p->kickoff?->format('D j M') ?? 'Date TBC' }}</b>
                                             {{ $p->kickoff?->format('H:i') }}

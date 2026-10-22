@@ -87,6 +87,49 @@ class Prediction extends Model
         return $this->hit ? 'aligned' : 'unexpected';
     }
 
+    // football-data.co.uk's own league codes (country-prefix + division digit
+    // for the "core" leagues, bare 3-letter country code for the single-division
+    // "world leagues" set) — see algorithm/scan_today.py's team_country_prefixes()
+    // for how the Python side uses the same codes. This is every code actually
+    // present in the training data as of 2026-10-22; an unmapped future code
+    // falls back to showing itself rather than hiding the league entirely.
+    private const LEAGUE_NAMES = [
+        'E0' => 'Premier League (England)', 'E1' => 'Championship (England)',
+        'E2' => 'League One (England)', 'E3' => 'League Two (England)',
+        'EC' => 'National League (England)',
+        'SC0' => 'Premiership (Scotland)', 'SC1' => 'Championship (Scotland)',
+        'SC2' => 'League One (Scotland)', 'SC3' => 'League Two (Scotland)',
+        'D1' => 'Bundesliga (Germany)', 'D2' => '2. Bundesliga (Germany)',
+        'SP1' => 'La Liga (Spain)', 'SP2' => 'La Liga 2 (Spain)',
+        'I1' => 'Serie A (Italy)', 'I2' => 'Serie B (Italy)',
+        'F1' => 'Ligue 1 (France)', 'F2' => 'Ligue 2 (France)',
+        'N1' => 'Eredivisie (Netherlands)',
+        'B1' => 'Pro League (Belgium)',
+        'P1' => 'Primeira Liga (Portugal)',
+        'T1' => 'Super Lig (Turkey)',
+        'G1' => 'Super League (Greece)',
+        'ARG' => 'Primera Division (Argentina)',
+        'AUT' => 'Bundesliga (Austria)',
+        'BRA' => 'Serie A (Brazil)',
+        'CHN' => 'Super League (China)',
+        'DNK' => 'Superliga (Denmark)',
+        'FIN' => 'Veikkausliiga (Finland)',
+        'IRL' => 'Premier Division (Ireland)',
+        'JPN' => 'J1 League (Japan)',
+        'MEX' => 'Liga MX (Mexico)',
+        'NOR' => 'Eliteserien (Norway)',
+        'POL' => 'Ekstraklasa (Poland)',
+    ];
+
+    public function leagueLabel(): string
+    {
+        if (! $this->league) {
+            return 'Football';
+        }
+
+        return self::LEAGUE_NAMES[$this->league] ?? $this->league;
+    }
+
     /**
      * The real, live track record — mirrors agent/ledger.py's track_record().
      */

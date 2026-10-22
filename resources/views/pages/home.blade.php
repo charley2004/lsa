@@ -205,7 +205,7 @@
         @foreach ($previewPredictions as $p)
           <article class="match">
             <div class="match__top">
-              <span class="chip">{{ $p->league ?? 'Football' }}</span>
+              <span class="chip">{{ $p->leagueLabel() }}</span>
               @if ($p->kickoff)
                 <time class="num" datetime="{{ $p->kickoff->format('Y-m-d\TH:i') }}">{{ $p->kickoff->format('D j M · H:i') }}</time>
               @else

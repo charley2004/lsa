@@ -30,6 +30,7 @@ class PredictionSyncController extends Controller
             'predictions.*.kickoff' => 'nullable|date',
             'predictions.*.market' => 'required|string',
             'predictions.*.predicted_probability' => 'required|numeric',
+            'predictions.*.odds' => 'nullable|numeric',
             'predictions.*.verdict' => 'required|in:confident_pick,lean,no_confident_pick',
             'predictions.*.conviction' => 'nullable|numeric',
             'predictions.*.skill' => 'nullable|numeric',

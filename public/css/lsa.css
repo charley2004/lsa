@@ -1052,6 +1052,7 @@ html.menu-open { overflow: hidden; }
 .read__facts dt { font-size: 0.75rem; color: var(--text-3); }
 .read__facts dd { margin-top: 4px; font-size: 0.875rem; }
 .read__notes { display: grid; gap: 10px; margin-top: 18px; }
+.read__odds-note { margin-top: 10px; font-size: 0.75rem; color: var(--text-3); }
 .read__notes .callout { background: var(--bg); font-size: 0.875rem; }
 
 /* Verdict chip — neutral base; add modifiers to match your verdictClass() values */
@@ -1136,6 +1137,8 @@ html.menu-open { overflow: hidden; }
 .rtable td.c-factor::before, .rtable td.c-score::before { display: none; }
 .rtable td.c-empty { grid-column: 1 / -1; justify-content: center; border: 0; color: var(--text-3); }
 .rtable td.c-empty::before { display: none; }
+.c-factor__odds { font-family: var(--mono); font-size: 0.75rem; color: var(--text-3); }
+
 .vs-sm { margin: 0 6px; font-family: var(--mono); font-size: 0.6875rem; font-weight: 400; color: var(--text-3); }
 .score { font-family: var(--mono); font-weight: 500; padding: 2px 8px; border-radius: 6px; background: var(--bg-soft); border: 1px solid var(--line); }
 

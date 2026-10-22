@@ -172,7 +172,13 @@
                                             <dl class="read__facts">
                                                 <div><dt>Verdict</dt><dd><span class="verdict {{ $p->verdictClass() }}">{{ $p->verdictLabel() }}</span></dd></div>
                                                 <div><dt>Market skill</dt><dd class="num">{{ number_format($p->skill ?? 0, 4) }}</dd></div>
+                                                @if ($p->odds !== null)
+                                                    <div><dt>Odds</dt><dd class="num">{{ number_format($p->odds, 2) }}</dd></div>
+                                                @endif
                                             </dl>
+                                            @if ($p->odds === null)
+                                                <p class="read__odds-note">No bookmaker price available for this specific market — odds are only shown for 1X2 and Over/Under 2.5 picks, where we have a real price to compare against.</p>
+                                            @endif
 
                                             <div class="read__notes">
                                                 @if ($p->h2h_note)

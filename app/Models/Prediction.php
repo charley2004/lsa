@@ -11,7 +11,7 @@ class Prediction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'logged_at', 'home', 'away', 'kickoff', 'market', 'predicted_probability',
+        'logged_at', 'home', 'away', 'kickoff', 'market', 'predicted_probability', 'odds',
         'verdict', 'conviction', 'skill', 'source',
         'settled_at', 'home_goals', 'away_goals',
         'home_corners', 'away_corners', 'home_cards', 'away_cards', 'hit',
@@ -23,6 +23,7 @@ class Prediction extends Model
         'kickoff' => 'datetime',
         'settled_at' => 'datetime',
         'predicted_probability' => 'float',
+        'odds' => 'float',
         'conviction' => 'float',
         'skill' => 'float',
         'xg_home' => 'float',

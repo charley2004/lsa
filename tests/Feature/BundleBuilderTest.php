@@ -13,6 +13,19 @@ class BundleBuilderTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Pinned, not left floating on the real wall clock: Banker 2/Odds 10
+        // are now scoped to the calendar day (see BundleBuilder::nearTermPool),
+        // so a pick() kickoff of "+12h" needs a known, safely-mid-day "now" or
+        // it'd intermittently roll into tomorrow and fall outside the window
+        // depending on what time these tests happen to run. Tests that care
+        // about a specific day (weekend ones) override this with their own
+        // Carbon::setTestNow() call, which this doesn't fight.
+        Carbon::setTestNow(Carbon::parse('2026-10-24 08:00:00'));
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();

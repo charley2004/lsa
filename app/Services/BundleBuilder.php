@@ -21,8 +21,6 @@ use Illuminate\Support\Collection;
 // the "set it and forget it" principle this whole pipeline was built on.
 class BundleBuilder
 {
-    private const NEAR_TERM_HOURS = 48;
-
     private const ODDS_10_TARGET = 10.0;
 
     private const ODDS_10_BAND_LOW = 8.0;
@@ -44,7 +42,15 @@ class BundleBuilder
         $this->buildWeekendPicks($today);
     }
 
-    private function nearTermPool(): Collection
+    /**
+     * Scoped to $day's calendar day (not a rolling N-hour window) — Banker 2
+     * and the 10-Odds Combo are a daily product: rebuilt fresh each day from
+     * that day's own fixtures, never bleeding into tomorrow's slate the way
+     * a rolling 48h window would at, say, 11pm. Weekend Picks is the one
+     * deliberate exception that spans two calendar days (Sat+Sun) — see
+     * buildWeekendPicks, which doesn't call this.
+     */
+    private function nearTermPool(Carbon $day): Collection
     {
         return Prediction::query()
             ->open()
@@ -52,7 +58,7 @@ class BundleBuilder
             ->whereNotNull('odds')
             ->whereNotNull('kickoff')
             ->where('kickoff', '>=', now())
-            ->where('kickoff', '<=', now()->addHours(self::NEAR_TERM_HOURS))
+            ->where('kickoff', '<=', $day->copy()->endOfDay())
             ->get()
             // One leg per fixture — an accumulator leaning on two markets
             // from the same match isn't two independent reads, it's one
@@ -63,7 +69,7 @@ class BundleBuilder
 
     private function buildBanker2(Carbon $today): void
     {
-        $picks = $this->nearTermPool()
+        $picks = $this->nearTermPool($today)
             ->sortByDesc(fn (Prediction $p) => [$p->predicted_probability, $p->skill])
             ->values();
 
@@ -74,7 +80,7 @@ class BundleBuilder
 
     private function buildOdds10(Carbon $today): void
     {
-        $pool = $this->nearTermPool()
+        $pool = $this->nearTermPool($today)
             ->sortByDesc('predicted_probability')
             ->take(self::ODDS_10_POOL_CAP)
             ->values();

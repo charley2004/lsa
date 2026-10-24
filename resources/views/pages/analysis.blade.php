@@ -181,8 +181,8 @@
                                             @endif
 
                                             <div class="read__notes">
-                                                @if ($p->h2h_note)
-                                                    <div class="callout callout--info"><p><strong>Head-to-head:</strong> {{ $p->h2h_note }}</p></div>
+                                                @if ($p->h2hNoteLabel())
+                                                    <div class="callout callout--info"><p><strong>Head-to-head:</strong> {{ $p->h2hNoteLabel() }}</p></div>
                                                 @endif
                                                 <div class="callout callout--plain"><p>A statistical model output, not a guarantee. Skill is measured against historical calibration. <a href="{{ route('disclaimer') }}">Read the disclaimer</a>.</p></div>
                                             </div>

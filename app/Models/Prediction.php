@@ -87,6 +87,23 @@ class Prediction extends Model
         return $this->hit ? 'aligned' : 'unexpected';
     }
 
+    // h2h_note comes straight from the algorithm's internal
+    // agent/h2h_consistency.py, written for a developer reading logs — it
+    // includes a raw statistical p-value, e.g. "total cards Over 3.5: 7/8
+    // meetings (p=0.0703) — worth noting — ...". That parenthetical means
+    // nothing to a site visitor and reads as an error/placeholder rather
+    // than a stat, so it's stripped here for display — the plain-English
+    // meetings/fraction and the caveat sentence around it already carry the
+    // actual information.
+    public function h2hNoteLabel(): ?string
+    {
+        if (! $this->h2h_note) {
+            return null;
+        }
+
+        return trim((string) preg_replace('/\s*\(p=[0-9.]+\)/', '', $this->h2h_note));
+    }
+
     // football-data.co.uk's own league codes (country-prefix + division digit
     // for the "core" leagues, bare 3-letter country code for the single-division
     // "world leagues" set) — see algorithm/scan_today.py's team_country_prefixes()

@@ -716,6 +716,11 @@ html.menu-open { overflow: hidden; }
 
 .combo-leg-odds { font-family: var(--mono); color: var(--text-3); margin-left: 4px; }
 
+.combo-panel__stake { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.combo-panel__stake-label { font-size: 0.75rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.combo-panel__stake-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.combo-panel__stake-note { margin-top: 10px; font-size: 0.75rem; color: var(--text-3); }
+
 
 /* ---------- 11. Record (dark band) ---------- */
 .record { background: var(--dark); color: var(--dark-text); overflow: hidden; isolation: isolate; }

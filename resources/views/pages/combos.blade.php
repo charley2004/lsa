@@ -81,6 +81,18 @@
                                     </article>
                                 @endforeach
                             </div>
+
+                            @if ($stakeOffers->isNotEmpty())
+                                <div class="combo-panel__stake">
+                                    <p class="combo-panel__stake-label">Stake this combo</p>
+                                    <div class="combo-panel__stake-btns">
+                                        @foreach ($stakeOffers as $offer)
+                                            <a class="btn btn--ghost btn--sm" href="{{ route('offer.go', $offer->slug) }}" rel="sponsored noopener" target="_blank">Stake on {{ $offer->name }}</a>
+                                        @endforeach
+                                    </div>
+                                    <p class="combo-panel__stake-note">Opens the bookmaker's own site/app — build the combo above there yourself using the picks and odds shown.</p>
+                                </div>
+                            @endif
                         </article>
                     @endforeach
                 </div>

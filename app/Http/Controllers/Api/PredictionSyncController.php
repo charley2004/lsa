@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Prediction;
+use App\Services\BundleBuilder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -85,6 +86,14 @@ class PredictionSyncController extends Controller
                 }
             }
         });
+
+        // Rebuilds Banker 2 / 10-Odds Combo / Top Weekend Picks from whatever
+        // confident_pick + odds predictions are now current — runs on every
+        // sync so the bundles never need a separate manual trigger. Outside
+        // the transaction above: it only reads already-committed predictions
+        // and writes its own tables, so it doesn't need to share that
+        // transaction's atomicity.
+        app(BundleBuilder::class)->rebuild();
 
         return response()->json(['created' => $created, 'updated' => $updated]);
     }

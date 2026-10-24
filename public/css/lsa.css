@@ -689,6 +689,33 @@ html.menu-open { overflow: hidden; }
 .match__link svg { transition: transform .3s var(--ease); }
 .match:hover .match__link svg { transform: translateX(3px); }
 
+/* ---------- 10b. Combo bundles ---------- */
+.combo-grid { display: grid; gap: 24px; }
+@media (min-width: 900px) { .combo-grid { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; } }
+
+.combo-panel {
+    padding: 24px; border: 1px solid var(--line); border-radius: var(--r-xl); background: var(--bg);
+}
+.combo-panel__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.combo-panel__strap { margin-top: 6px; font-size: 0.875rem; color: var(--text-2); max-width: 36ch; }
+.combo-panel__legs { display: grid; gap: 12px; margin-top: 20px; }
+
+.combo-odds {
+    flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--accent-soft); text-align: center;
+}
+.combo-odds__num { font-family: var(--mono); font-weight: 600; font-size: 1.125rem; color: var(--accent-ink); }
+.combo-odds__label { font-size: 0.5625rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin-top: 2px; }
+
+.match--compact { padding: 14px 16px; }
+.match--compact .match__teams { margin: 14px 0 10px; gap: 6px; }
+.match--compact .match__team { font-size: 0.875rem; gap: 10px; }
+.match--compact .match__team .crest { width: 28px; height: 28px; font-size: 0.625rem; }
+.match--compact .match__text { margin-top: 10px; font-size: 0.8125rem; }
+
+.combo-leg-odds { font-family: var(--mono); color: var(--text-3); margin-left: 4px; }
+
 
 /* ---------- 11. Record (dark band) ---------- */
 .record { background: var(--dark); color: var(--dark-text); overflow: hidden; isolation: isolate; }

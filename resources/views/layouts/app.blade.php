@@ -88,6 +88,7 @@
     $navItems = [
         ['home',     'Home'],
         ['analysis', 'Analysis'],
+        ['combos',   'Combos'],
         ['results',  'Results'],
         ['about',    'About'],
         ['contact',  'Contact'],
@@ -149,6 +150,7 @@
             <nav class="footer__col" aria-label="Platform">
                 <h3>Platform</h3>
                 <a href="{{ route('analysis') }}">Analysis</a>
+                <a href="{{ route('combos') }}">Combos</a>
                 <a href="{{ route('results') }}">Results</a>
                 <a href="{{ route('about') }}">About</a>
             </nav>

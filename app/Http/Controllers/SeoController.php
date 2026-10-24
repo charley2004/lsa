@@ -29,6 +29,7 @@ class SeoController extends Controller
         $urls = [
             ['route' => 'home', 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => $latestPrediction],
             ['route' => 'analysis', 'priority' => '0.9', 'changefreq' => 'daily', 'lastmod' => $latestPrediction],
+            ['route' => 'combos', 'priority' => '0.8', 'changefreq' => 'daily', 'lastmod' => $latestPrediction],
             ['route' => 'results', 'priority' => '0.8', 'changefreq' => 'daily', 'lastmod' => $latestSettled],
             ['route' => 'about', 'priority' => '0.5', 'changefreq' => 'monthly', 'lastmod' => null],
             ['route' => 'contact', 'priority' => '0.4', 'changefreq' => 'monthly', 'lastmod' => null],

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccumulatorController;
 use App\Http\Controllers\AnalysisController;
 use App\Http\Controllers\BookmakerOfferController;
 use App\Http\Controllers\ContactController;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [StaticController::class, 'about'])->name('about');
 Route::get('/analysis', [AnalysisController::class, 'index'])->name('analysis');
+Route::get('/combos', [AccumulatorController::class, 'index'])->name('combos');
 Route::get('/results', [ResultsController::class, 'index'])->name('results');
 Route::get('/disclaimer', [StaticController::class, 'disclaimer'])->name('disclaimer');
 Route::get('/privacy-policy', [StaticController::class, 'privacy'])->name('privacy');

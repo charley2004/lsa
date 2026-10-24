@@ -17,6 +17,7 @@ class PagesTest extends TestCase
             'home' => ['home'],
             'about' => ['about'],
             'analysis' => ['analysis'],
+            'combos' => ['combos'],
             'results' => ['results'],
             'contact' => ['contact'],
             'disclaimer' => ['disclaimer'],
@@ -81,7 +82,7 @@ class PagesTest extends TestCase
         $response = $this->get('/sitemap.xml');
 
         $response->assertOk();
-        foreach (['home', 'about', 'analysis', 'results', 'contact', 'disclaimer', 'privacy'] as $name) {
+        foreach (['home', 'about', 'analysis', 'combos', 'results', 'contact', 'disclaimer', 'privacy'] as $name) {
             $response->assertSee(route($name), false);
         }
     }

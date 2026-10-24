@@ -88,20 +88,39 @@ class Prediction extends Model
     }
 
     // h2h_note comes straight from the algorithm's internal
-    // agent/h2h_consistency.py, written for a developer reading logs — it
-    // includes a raw statistical p-value, e.g. "total cards Over 3.5: 7/8
-    // meetings (p=0.0703) — worth noting — ...". That parenthetical means
-    // nothing to a site visitor and reads as an error/placeholder rather
-    // than a stat, so it's stripped here for display — the plain-English
-    // meetings/fraction and the caveat sentence around it already carry the
-    // actual information.
+    // agent/h2h_consistency.py, written for a developer reading logs, not a
+    // site visitor — e.g. "H2H Rangers win: 13/15 meetings — notable — 15
+    // meetings is a small sample; treat as a fixture-specific lean, not a
+    // calibrated pick like the global-skill markets." The market/hits/
+    // meetings numbers are real and worth keeping; "calibrated pick",
+    // "global-skill markets" etc. are internal engineering vocabulary that
+    // reads as a glitch to a visitor, not a reason. Reconstructed here into
+    // one plain sentence instead of just trimming the raw string.
     public function h2hNoteLabel(): ?string
     {
         if (! $this->h2h_note) {
             return null;
         }
 
-        return trim((string) preg_replace('/\s*\(p=[0-9.]+\)/', '', $this->h2h_note));
+        $note = preg_replace('/\s*\(p=[0-9.]+\)/', '', $this->h2h_note);
+
+        if (preg_match('/^(?:H2H\s+)?(.+?):\s*(\d+)\/(\d+)\s*meetings\b/iu', $note, $m)) {
+            $market = ucfirst(trim($m[1]));
+            $hits = (int) $m[2];
+            $meetings = (int) $m[3];
+
+            $label = "{$market} — {$hits} of the last {$meetings} meetings between these two sides.";
+
+            if ($meetings < 10) {
+                $label .= ' A real pattern, but a small sample — a lean worth knowing, not a calibrated probability.';
+            }
+
+            return $label;
+        }
+
+        // Unrecognized shape — still show the (p-value-stripped) original
+        // rather than hiding it outright.
+        return trim((string) $note);
     }
 
     // football-data.co.uk's own league codes (country-prefix + division digit

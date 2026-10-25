@@ -1184,7 +1184,16 @@ html.menu-open { overflow: hidden; }
 .outcome.aligned { background: var(--pos-soft); color: #065f46; }
 .outcome.aligned::before { background: currentColor; }
 
-.js .rtable tbody tr { opacity: 0; transform: translateY(8px); transition: opacity .6s var(--ease-out), transform .6s var(--ease-out); transition-delay: calc(min(var(--n, 0), 12) * 40ms); }
+/* Rows fade in together, not one-by-one: the .rtable-wrap[data-reveal]
+   ancestor already fades the whole table in as a unit (scroll reveal rule
+   above). A PER-ROW stagger on top of that was doubling up on a results
+   table that can run 50 rows deep — at a 40ms-per-row delay (capped at row
+   12) plus a 600ms fade, the last rows didn't finish appearing until over a
+   second after the table scrolled into view, which read as the page being
+   slow to load rather than an intentional animation. Fine for a handful of
+   decorative cards elsewhere on the site; wrong for a data table meant to
+   be trusted as the complete, accurate record the moment it's visible. */
+.js .rtable tbody tr { opacity: 0; transform: translateY(8px); transition: opacity .3s var(--ease-out), transform .3s var(--ease-out); }
 .js .is-in .rtable tbody tr { opacity: 1; transform: none; }
 
 @media (min-width: 768px) {

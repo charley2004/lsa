@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [StaticController::class, 'about'])->name('about');
 Route::get('/analysis', [AnalysisController::class, 'index'])->name('analysis');
+// One permanent page per fixture, e.g. /analysis/man-city-vs-fulham-2026-11-21.
+Route::get('/analysis/{slug}', [AnalysisController::class, 'show'])
+    ->where('slug', '[a-z0-9-]+')
+    ->name('analysis.show');
 Route::get('/combos', [AccumulatorController::class, 'index'])->name('combos');
 Route::get('/results', [ResultsController::class, 'index'])->name('results');
 Route::get('/disclaimer', [StaticController::class, 'disclaimer'])->name('disclaimer');

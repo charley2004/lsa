@@ -33,6 +33,89 @@ class Prediction extends Model
         'away_form' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        // The slug is fixed at creation and deliberately NOT recomputed on
+        // update: once a fixture URL is live (and possibly indexed), it must
+        // keep resolving even if a later sync edits the row.
+        static::creating(function (Prediction $p) {
+            if (empty($p->slug) && static::slugsEnabled()) {
+                $p->slug = static::makeSlug($p->home, $p->away, $p->kickoff);
+            }
+        });
+    }
+
+    /**
+     * Deploy safety net: if new code reaches a server before
+     * `php artisan migrate` has added the slug column, writing a slug would
+     * make every sync INSERT fail. Until the column exists, slugs are simply
+     * skipped (no fixture pages, no links) and everything else keeps working.
+     * Checked once per request.
+     */
+    public static function slugsEnabled(): bool
+    {
+        static $enabled = null;
+
+        return $enabled ??= \Illuminate\Support\Facades\Schema::hasColumn('predictions', 'slug');
+    }
+
+    /**
+     * "Man City", "Fulham", 2026-11-21 15:00 -> "man-city-vs-fulham-2026-11-21".
+     * The date keeps repeat meetings between the same two sides (league + cup,
+     * or next season) on separate pages instead of colliding.
+     */
+    public static function makeSlug(?string $home, ?string $away, $kickoff): string
+    {
+        // The date in the URL is the local (display-timezone) match date, so
+        // it always agrees with the date printed on the page.
+        $date = $kickoff
+            ? \Illuminate\Support\Carbon::parse($kickoff, 'UTC')->setTimezone(static::displayTimezone())->format('Y-m-d')
+            : 'tbc';
+
+        return \Illuminate\Support\Str::slug("{$home} vs {$away}") . '-' . $date;
+    }
+
+    public static function displayTimezone(): string
+    {
+        return config('lsa.display_timezone', 'Africa/Lagos');
+    }
+
+    /** Kickoff converted to the visitor-facing timezone (storage stays UTC). */
+    public function localKickoff(): ?\Illuminate\Support\Carbon
+    {
+        return $this->kickoff?->copy()->setTimezone(static::displayTimezone());
+    }
+
+    /** "19:45 WAT" */
+    public function kickoffTime(): ?string
+    {
+        return $this->localKickoff()?->format('H:i T');
+    }
+
+    public function fixtureUrl(): ?string
+    {
+        return $this->slug ? route('analysis.show', $this->slug) : null;
+    }
+
+    /**
+     * Quality gate for indexing a fixture page: it must carry real pre-match
+     * data (projected goals or recent form), not just a market name and a
+     * number. Rows synced only after settlement carry neither, and a page made
+     * of nothing but a bare probability is thin content — those pages still
+     * render for visitors but are marked noindex and left out of the sitemap.
+     */
+    public function scopeWithAnalysisData(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereNotNull('xg_home')
+            ->orWhere(fn (Builder $f) => $f->whereNotNull('home_form')->where('home_form', '!=', '[]')));
+    }
+
+    public function hasAnalysisData(): bool
+    {
+        return $this->xg_home !== null || ! empty($this->home_form) || ! empty($this->away_form);
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereNull('settled_at');

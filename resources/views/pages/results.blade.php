@@ -119,8 +119,8 @@
                         @forelse ($settled as $i => $p)
                             @php $oc = $p->outcomeClass(); @endphp
                             <tr class="is-{{ $oc }}" data-outcome="{{ $oc }}" style="--n:{{ $i }}">
-                                <td class="c-date" data-label="Date">{{ $p->kickoff?->format('j M') ?? '—' }}</td>
-                                <td class="c-match" data-label="Match">{{ $p->home }}<span class="vs-sm">vs</span>{{ $p->away }}</td>
+                                <td class="c-date" data-label="Date">{{ $p->localKickoff()?->format('j M') ?? '—' }}</td>
+                                <td class="c-match" data-label="Match">@if ($p->slug)<a class="c-match__link" href="{{ $p->fixtureUrl() }}">{{ $p->home }}<span class="vs-sm">vs</span>{{ $p->away }}</a>@else{{ $p->home }}<span class="vs-sm">vs</span>{{ $p->away }}@endif</td>
                                 <td class="c-factor" data-label="Key factor">{{ $p->market }}@if ($p->odds)<span class="c-factor__odds"> @ {{ number_format($p->odds, 2) }}</span>@endif</td>
                                 <td class="c-score" data-label="Result"><span class="score">{{ $p->home_goals }}–{{ $p->away_goals }}</span></td>
                                 <td class="c-outcome" data-label="Outcome"><span class="outcome {{ $oc }}">{{ $p->outcomeLabel() }}</span></td>

@@ -30,7 +30,7 @@ class AccumulatorBundle extends Model
 
     public function scopeUpcoming(Builder $query): Builder
     {
-        return $query->whereDate('date', '>=', now()->toDateString())->orderBy('date');
+        return $query->whereDate('date', '>=', now(\App\Models\Prediction::displayTimezone())->toDateString())->orderBy('date');
     }
 
     public function label(): string

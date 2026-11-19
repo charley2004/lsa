@@ -37,6 +37,28 @@ class SeoController extends Controller
             ['route' => 'privacy', 'priority' => '0.3', 'changefreq' => 'yearly', 'lastmod' => null],
         ];
 
+        // One entry per fixture page (several markets for the same fixture share
+        // a slug), and only for fixtures that pass the same quality gate the
+        // page itself uses for its robots tag — a URL we mark noindex shouldn't
+        // also be advertised here. Still well under the 50,000-URL sitemap limit
+        // for years at ~45 fixtures/day; split into a sitemap index if that changes.
+        $fixtures = ! Prediction::slugsEnabled() ? collect() : Prediction::query()
+            ->whereNotNull('slug')
+            ->withAnalysisData()
+            ->selectRaw('slug, MAX(updated_at) AS lastmod, MAX(settled_at) AS settled')
+            ->groupBy('slug')
+            ->orderByDesc('lastmod')
+            ->get();
+
+        foreach ($fixtures as $f) {
+            $urls[] = [
+                'loc' => route('analysis.show', $f->slug),
+                'priority' => $f->settled ? '0.5' : '0.7',
+                'changefreq' => $f->settled ? 'monthly' : 'daily',
+                'lastmod' => $f->lastmod,
+            ];
+        }
+
         $xml = view('sitemap', compact('urls'))->render();
 
         return response($xml, 200)->header('Content-Type', 'application/xml');

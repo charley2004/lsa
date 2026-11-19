@@ -2,18 +2,23 @@
 <html lang="en">
 <head>
     @php
-        $pageTitle = trim($__env->yieldContent('title', 'LSA — LEGIT SOURCE ANALYSIS'));
-        $pageDescription = trim($__env->yieldContent('description', 'Data-driven football match analysis. Expected goals, form, head-to-head and team news — with every result published, hits and misses alike.'));
+        // Inline @section('x', '...') values arrive already HTML-escaped by
+        // Blade; decode once here so the {{ }} below escapes exactly once
+        // (otherwise "Today's" / "&" render as visible &#039; / &amp; entities).
+        $pageTitle = html_entity_decode(trim($__env->yieldContent('title', 'LSA — LEGIT SOURCE ANALYSIS')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $pageDescription = html_entity_decode(trim($__env->yieldContent('description', 'Data-driven football match analysis. Expected goals, form, head-to-head and team news — with every result published, hits and misses alike.')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $canonicalUrl = url()->current();
         $ogImageUrl = asset('images/og-default.png');
-        $telegramUrl = 'https://t.me/+8Khvrbv71dZkNTc0';
+        $telegramUrl = config('lsa.telegram_url');
+        $robots = trim($__env->yieldContent('robots', 'index, follow'));
+        $ogType = trim($__env->yieldContent('og_type', 'website'));
     @endphp
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $pageTitle }}</title>
     <meta name="description" content="{{ $pageDescription }}">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{{ $robots }}">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     <meta name="theme-color" content="#0b1220">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -24,7 +29,7 @@
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
     <!-- Open Graph -->
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{{ $ogType }}">
     <meta property="og:site_name" content="LSA — LEGIT SOURCE ANALYSIS">
     <meta property="og:locale" content="en_US">
     <meta property="og:url" content="{{ $canonicalUrl }}">
@@ -77,9 +82,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/lsa.css') }}">
-    <script src="{{ asset('js/lsa.js') }}" defer></script>
-    <script src="{{ asset('js/analytics.js') }}" defer></script>
+    {{-- ?v= changes whenever the file changes, so the server can send long-lived
+         cache headers for these without visitors getting stale CSS/JS. --}}
+    <link rel="stylesheet" href="{{ asset('css/lsa.css') }}?v={{ @filemtime(public_path('css/lsa.css')) }}">
+    <script src="{{ asset('js/lsa.js') }}?v={{ @filemtime(public_path('js/lsa.js')) }}" defer></script>
+    <script src="{{ asset('js/analytics.js') }}?v={{ @filemtime(public_path('js/analytics.js')) }}" defer></script>
     @stack('head')
 </head>
 <body>

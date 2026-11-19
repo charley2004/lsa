@@ -35,7 +35,8 @@ class BundleBuilder
 
     public function rebuild(): void
     {
-        $today = Carbon::today();
+        // The visitor's calendar day (Lagos), not the server's UTC day.
+        $today = Carbon::today(Prediction::displayTimezone());
 
         $this->buildBanker2($today);
         $this->buildOdds10($today);
@@ -58,7 +59,7 @@ class BundleBuilder
             ->whereNotNull('odds')
             ->whereNotNull('kickoff')
             ->where('kickoff', '>=', now())
-            ->where('kickoff', '<=', $day->copy()->endOfDay())
+            ->where('kickoff', '<=', $day->copy()->endOfDay()->utc())
             ->get()
             // One leg per fixture — an accumulator leaning on two markets
             // from the same match isn't two independent reads, it's one
@@ -177,7 +178,7 @@ class BundleBuilder
             ->open()
             ->whereIn('verdict', ['confident_pick', 'lean'])
             ->whereNotNull('kickoff')
-            ->whereBetween('kickoff', [$saturday->copy()->startOfDay(), $sundayEnd])
+            ->whereBetween('kickoff', [$saturday->copy()->startOfDay()->utc(), $sundayEnd->copy()->utc()])
             ->get()
             ->unique(fn (Prediction $p) => $p->home.'|'.$p->away)
             ->sortByDesc(fn (Prediction $p) => [$p->verdict === 'confident_pick' ? 1 : 0, $p->skill])

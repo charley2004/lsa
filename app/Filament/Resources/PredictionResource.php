@@ -88,7 +88,7 @@ class PredictionResource extends Resource
                 Tables\Columns\TextColumn::make('away')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('kickoff')
-                    ->dateTime()
+                    ->dateTime(timezone: config('lsa.display_timezone'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('market')
                     ->searchable(),

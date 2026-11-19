@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Match Analysis | LEGIT SOURCE ANALYSIS')
-@section('description', 'Current football match analysis with statistics, form, and insights from LSA.')
+@section('title', 'Football Analysis Today: Match Previews & Stats | LSA')
+@section('description', "Today's football match analysis: model-projected xG, last-5 form, head-to-head records and calibrated probabilities for every fixture — with every result published.")
 
 @php
     // Crest helpers: initials + a stable colour per team name (no club logos needed)
@@ -18,14 +18,14 @@
         if ($key === 'tbc') {
             return 'Date TBC';
         }
-        $date = \Illuminate\Support\Carbon::parse($key);
+        $date = \Illuminate\Support\Carbon::parse($key, \App\Models\Prediction::displayTimezone());
         if ($date->isToday()) {
-            return 'Today — ' . $date->format('j M');
+            return "Today's matches — " . $date->format('l j F');
         }
         if ($date->isTomorrow()) {
-            return 'Tomorrow — ' . $date->format('j M');
+            return "Tomorrow's matches — " . $date->format('l j F');
         }
-        return $date->format('l, j F');
+        return 'Matches on ' . $date->format('l j F');
     };
 
     // Short label for the filter tab itself (stays compact at any slate length).
@@ -33,7 +33,7 @@
         if ($key === 'tbc') {
             return 'TBC';
         }
-        $date = \Illuminate\Support\Carbon::parse($key);
+        $date = \Illuminate\Support\Carbon::parse($key, \App\Models\Prediction::displayTimezone());
         if ($date->isToday()) {
             return 'Today';
         }
@@ -44,6 +44,50 @@
     };
 @endphp
 
+@push('head')
+    @php
+        // One ItemList entry per fixture page (several markets can share one).
+        $fixturePages = $predictions->filter(fn ($p) => $p->slug)->unique('slug')->values();
+        $hubSchema = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'CollectionPage',
+                    '@id' => route('analysis') . '#webpage',
+                    'url' => route('analysis'),
+                    'name' => 'Football Analysis Today: Match Previews & Stats',
+                    'description' => "Today's football match analysis: model-projected xG, last-5 form, head-to-head records and calibrated probabilities for every fixture.",
+                    'isPartOf' => ['@id' => url('/') . '#website'],
+                    'inLanguage' => 'en',
+                    'dateModified' => $lastUpdated ? \Illuminate\Support\Carbon::parse($lastUpdated)->toAtomString() : null,
+                    'breadcrumb' => ['@id' => route('analysis') . '#breadcrumb'],
+                    'mainEntity' => ['@id' => route('analysis') . '#fixtures'],
+                ],
+                [
+                    '@type' => 'BreadcrumbList',
+                    '@id' => route('analysis') . '#breadcrumb',
+                    'itemListElement' => [
+                        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
+                        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Analysis', 'item' => route('analysis')],
+                    ],
+                ],
+                [
+                    '@type' => 'ItemList',
+                    '@id' => route('analysis') . '#fixtures',
+                    'numberOfItems' => $fixturePages->count(),
+                    'itemListElement' => $fixturePages->map(fn ($p, $i) => [
+                        '@type' => 'ListItem',
+                        'position' => $i + 1,
+                        'url' => $p->fixtureUrl(),
+                        'name' => "{$p->home} vs {$p->away}",
+                    ])->all(),
+                ],
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">{!! json_encode($hubSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+@endpush
+
 @section('content')
 
     <!-- Page header -->
@@ -52,11 +96,17 @@
         <div class="container">
             <div class="page-head__inner">
                 <p class="kicker" data-hero style="--d:0ms">Match intelligence</p>
-                <h1 class="page-head__title" data-split>Football match analysis</h1>
-                <p class="page-head__lede" data-hero style="--d:350ms">Form, projected goals and our calibrated model's read for upcoming fixtures — with every outcome later published on the results ledger.</p>
+                {{-- No data-split/data-hero on the H1 and lede on purpose: those hide the
+                     text until lsa.js runs, which delays Largest Contentful Paint. --}}
+                <h1 class="page-head__title">Football Analysis Today</h1>
+                <p class="page-head__lede">Today's football match previews, built from data: model-projected goals (xG), last-five form, head-to-head records and a calibrated probability for every fixture we analyse — with every outcome later published on the results ledger.</p>
                 <div class="page-head__meta" data-hero style="--d:480ms">
                     <span><i class="dot-live" aria-hidden="true"></i><b>{{ $predictions->count() }}</b> {{ \Illuminate\Support\Str::plural('fixture', $predictions->count()) }} analysed</span>
-                    <span>Updated after every scan</span>
+                    @if ($lastUpdated)
+                        <span>Updated <time datetime="{{ \Illuminate\Support\Carbon::parse($lastUpdated)->toAtomString() }}">{{ \Illuminate\Support\Carbon::parse($lastUpdated)->setTimezone(\App\Models\Prediction::displayTimezone())->format('j M, H:i T') }}</time></span>
+                    @else
+                        <span>Updated after every scan</span>
+                    @endif
                     <a class="text-link" href="{{ route('results') }}">See how past reads turned out</a>
                 </div>
             </div>
@@ -97,7 +147,7 @@
                 @foreach ($byDay as $day => $dayPredictions)
                     <section data-day-group="{{ $day }}">
                         <div class="day-divider" data-reveal>
-                            <h3>{{ $dayLabel($day) }}</h3>
+                            <h2>{{ $dayLabel($day) }}</h2>
                             <span class="num">{{ $dayPredictions->count() }} {{ \Illuminate\Support\Str::plural('fixture', $dayPredictions->count()) }}</span>
                         </div>
 
@@ -109,23 +159,24 @@
                                     $prob = round(($p->predicted_probability ?? 0) * 100, 1);
                                 @endphp
                                 <article class="acard" data-reveal>
+                                    <h3 class="sr-only">@if ($p->slug)<a href="{{ $p->fixtureUrl() }}">{{ $p->home }} vs {{ $p->away }} analysis</a>@else{{ $p->home }} vs {{ $p->away }} analysis @endif</h3>
                                     <header class="acard__top">
                                         <span class="chip">{{ $p->leagueLabel() }}</span>
                                         <span class="acard__kick num">
-                                            <b>{{ $p->kickoff?->format('D j M') ?? 'Date TBC' }}</b>
-                                            {{ $p->kickoff?->format('H:i') }}
+                                            <b>{{ $p->localKickoff()?->format('D j M') ?? 'Date TBC' }}</b>
+                                            {{ $p->kickoffTime() }}
                                         </span>
                                     </header>
 
                                     <div class="acard__fixture">
                                         <div class="acard__team">
                                             <span class="crest" style="--c:{{ $hCol }}" aria-hidden="true">{{ $hInit }}</span>
-                                            <div><h2>{{ $p->home }}</h2><span class="cap">Home</span></div>
+                                            <div><p class="acard__name">{{ $p->home }}</p><span class="cap">Home</span></div>
                                         </div>
                                         <span class="acard__vs">VS</span>
                                         <div class="acard__team acard__team--away">
                                             <span class="crest" style="--c:{{ $aCol }}" aria-hidden="true">{{ $aInit }}</span>
-                                            <div><h2>{{ $p->away }}</h2><span class="cap">Away</span></div>
+                                            <div><p class="acard__name">{{ $p->away }}</p><span class="cap">Away</span></div>
                                         </div>
                                     </div>
 
@@ -177,22 +228,31 @@
                                                 @endif
                                             </dl>
                                             @if ($p->odds === null)
-                                                <p class="read__odds-note">No bookmaker price available for this specific market — we show real odds for 1X2, Double Chance, BTTS and Over/Under goal lines where a price exists, but corners, cards and Asian handicap picks aren't priced on the books we read.</p>
+                                                <p class="read__odds-note">No bookmaker price for this market — <a href="#odds-note">why</a>.</p>
                                             @endif
 
                                             <div class="read__notes">
                                                 @if ($p->h2hNoteLabel())
                                                     <div class="callout callout--info"><p><strong>Head-to-head:</strong> {{ $p->h2hNoteLabel() }}</p></div>
                                                 @endif
-                                                <div class="callout callout--plain"><p>A statistical model output, not a guarantee. Skill is measured against historical calibration. <a href="{{ route('disclaimer') }}">Read the disclaimer</a>.</p></div>
                                             </div>
+                                            @if ($p->slug)
+                                                <p class="acard__more"><a class="text-link" href="{{ $p->fixtureUrl() }}">Full {{ $p->home }} vs {{ $p->away }} analysis</a></p>
+                                            @endif
                                         </aside>
                                     </div>
                                 </article>
                             @endforeach
                         </div>
                     </section>
+                    @if ($loop->first)
+                        @include('partials.telegram-cta', ['placement' => 'analysis'])
+                    @endif
                 @endforeach
+            @endif
+
+            @if ($predictions->isNotEmpty())
+                <p class="read__odds-note" id="odds-note" style="margin-top:32px">About odds: we show real bookmaker prices for 1X2, Double Chance, BTTS and Over/Under goal lines where one exists. Corners, cards and Asian handicap reads aren't priced on the books we read, so they show no odds rather than an estimate.</p>
             @endif
 
             <!-- Disclaimer -->
@@ -202,6 +262,26 @@
                     <p><strong>This analysis does not predict or guarantee any specific outcome.</strong> It is based on publicly available statistics and recent form, and football is shaped by many variables no model captures. Content is for educational purposes only.</p>
                     <p><a href="{{ route('disclaimer') }}">Read the full disclaimer</a></p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works: crawlable explanatory copy for the page's topic -->
+    <section class="section" data-track-section="method">
+        <div class="container">
+            <div class="section-head">
+                <p class="kicker">Method</p>
+                <h2 class="h2">How our football analysis works</h2>
+            </div>
+            <div class="prose">
+                <h3>Projected goals (xG)</h3>
+                <p>Each fixture gets a projected-goals figure for both sides from models trained on many seasons of historical results across more than 20 leagues. It shows which side is more likely to create the better chances — not a promised scoreline.</p>
+                <h3>Recent form and head-to-head</h3>
+                <p>Last-five form shows how each team is actually playing right now. Where two sides show a consistent pattern across past meetings we note it, and say so plainly when the sample is small.</p>
+                <h3>Calibrated probability</h3>
+                <p>The headline number on each card is a probability checked against how often similar reads came true in the past. Only fixtures where the model has a clear read appear on this page.</p>
+                <h3>Every result published</h3>
+                <p>After full time, every fixture is graded and added to the <a href="{{ route('results') }}">results ledger</a> — the misses as well as the hits. Each fixture keeps its own analysis page, so you can always check what we said before kickoff. See also <a href="{{ route('combos') }}">today's combos</a> and <a href="{{ route('about') }}">our approach</a>.</p>
             </div>
         </div>
     </section>

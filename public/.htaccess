@@ -5,6 +5,19 @@
 
     RewriteEngine On
 
+    # Canonical host: www.legitsourceanalysis.com -> legitsourceanalysis.com (301).
+    RewriteCond %{HTTP_HOST} ^www\.legitsourceanalysis\.com$ [NC]
+    RewriteRule ^ https://legitsourceanalysis.com%{REQUEST_URI} [L,R=301]
+
+    # Canonical scheme: http -> https (301). Production's Apache sits behind an
+    # nginx proxy that handles TLS, so Apache can't see HTTPS for itself; it
+    # relies on the proxy's X-Forwarded-Proto header instead. Only an explicit
+    # "http" value redirects. A missing header never does, so this rule can't
+    # cause a redirect loop.
+    RewriteCond %{HTTP_HOST} ^legitsourceanalysis\.com$ [NC]
+    RewriteCond %{HTTP:X-Forwarded-Proto} =http [NC]
+    RewriteRule ^ https://legitsourceanalysis.com%{REQUEST_URI} [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

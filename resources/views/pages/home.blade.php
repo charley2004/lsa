@@ -207,7 +207,7 @@
             <div class="match__top">
               <span class="chip">{{ $p->leagueLabel() }}</span>
               @if ($p->kickoff)
-                <time class="num" datetime="{{ $p->kickoff->format('Y-m-d\TH:i') }}">{{ $p->kickoff->format('D j M · H:i') }}</time>
+                <time class="num" datetime="{{ $p->kickoff->toAtomString() }}">{{ $p->localKickoff()->format('D j M · H:i T') }}</time>
               @else
                 <time class="num">Date TBC</time>
               @endif
@@ -290,7 +290,7 @@
         <ul class="ledger">
           @foreach ($ledger as $i => $l)
             <li style="--i:{{ $i }}">
-              <span class="ledger__match"><time class="num">{{ $l->kickoff?->format('j M') ?? '—' }}</time>{{ $l->home }} <b class="num">{{ $l->home_goals }}–{{ $l->away_goals }}</b> {{ $l->away }}</span>
+              <span class="ledger__match"><time class="num">{{ $l->localKickoff()?->format('j M') ?? '—' }}</time>{{ $l->home }} <b class="num">{{ $l->home_goals }}–{{ $l->away_goals }}</b> {{ $l->away }}</span>
               <span class="badge {{ $l->hit ? 'badge--pos' : 'badge--miss' }}">{{ $l->hit ? 'Aligned' : 'Unexpected' }}</span>
             </li>
           @endforeach

@@ -146,4 +146,22 @@ class FixturePageTest extends TestCase
 
         $this->get(route('results'))->assertOk()->assertSee($p->fixtureUrl(), false);
     }
+
+    public function test_homepage_uses_real_fixtures_and_covered_leagues_only(): void
+    {
+        $p = $this->fixture(['kickoff' => now()->addDay()]);
+
+        $html = $this->get(route('home'))->assertOk()
+            ->assertSee('<title>LSA: Data-Driven Football Analysis &amp; Match Previews</title>', false)
+            ->assertSee('id="console-data"', false)
+            ->assertSee('Premier League (England)')
+            ->assertSee($p->fixtureUrl(), false)
+            ->assertSee(config('lsa.telegram_url'), false)
+            ->getContent();
+
+        // No mock fixture, no claims the model can't back up, no dead links.
+        foreach (['Sat 18 Jan', 'Possession', 'Champions League', 'Team news', 'href="#"', 'App Store'] as $bad) {
+            $this->assertStringNotContainsString($bad, $html, "homepage still contains: {$bad}");
+        }
+    }
 }

@@ -188,7 +188,7 @@
                     <h2>No insider information</h2>
                     <div class="prose">
                         <div class="callout callout--info"><p><strong>LSA has NO access to insider information, fixed matches, or non-public data.</strong></p></div>
-                        <p>All our analysis is based solely on publicly available information including match statistics, team news, historical data, and other information accessible to the general public.</p>
+                        <p>All our analysis is based solely on publicly available information including match results, statistics, historical data, and other information accessible to the general public.</p>
                         <p><strong>Any claims of insider information, guaranteed tips, or fixed matches should be considered fraudulent and reported to appropriate authorities.</strong></p>
                     </div>
                 </article>

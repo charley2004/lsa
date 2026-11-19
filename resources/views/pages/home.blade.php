@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'LSA — LEGIT SOURCE ANALYSIS')
-@section('description', 'Data-driven football match analysis. Expected goals, form, head-to-head and team news — with every result published, hits and misses alike.')
+@section('title', 'LSA: Data-Driven Football Analysis & Match Previews')
+@section('description', 'Data-driven football match analysis: projected goals (xG), recent form, head-to-head and calibrated probabilities — with every result published, hits and misses alike.')
 
 @section('content')
 
@@ -38,7 +38,7 @@
 
       <h1 class="hero__title" data-split>Football analysis <span class="muted">that shows its work.</span></h1>
 
-      <p class="hero__lede" data-hero style="--d:450ms">LSA breaks down fixtures with expected goals, form, head-to-head and team news — then publishes how every read turned out. Hits and misses alike.</p>
+      <p class="hero__lede" data-hero style="--d:450ms">LSA breaks down fixtures with projected goals (xG), recent form and head-to-head patterns — then publishes how every read turned out. Hits and misses alike.</p>
 
       <div class="hero__actions" data-hero style="--d:560ms">
         <a class="btn btn--primary" href="{{ route('analysis') }}">Explore analysis
@@ -48,75 +48,62 @@
       </div>
 
       <dl class="hero__proof" data-hero style="--d:680ms">
-        <div><dt>Matches analysed</dt><dd class="num">@if(is_numeric($stats['matches_analyzed']))<span data-count="{{ $stats['matches_analyzed'] }}">{{ $stats['matches_analyzed'] }}</span>+@else{{ $stats['matches_analyzed'] }}@endif</dd></div>
-        <div><dt>Competitions</dt><dd class="num" data-count="15">15</dd></div>
+        <div><dt>Fixtures analysed</dt><dd class="num" data-count="{{ $stats['fixtures_analysed'] }}">{{ $stats['fixtures_analysed'] }}</dd></div>
+        <div><dt>Competitions</dt><dd class="num" data-count="{{ $stats['competitions'] }}">{{ $stats['competitions'] }}</dd></div>
         <div><dt>Aligned, all-time</dt><dd class="num"><span data-count="{{ $stats['hit_rate'] }}">{{ $stats['hit_rate'] }}</span>%</dd></div>
       </dl>
     </div>
 
-    <!-- Analysis console -->
+    <!-- Analysis console: real fixtures from the Analysis page (see HomeController) -->
+    @if ($consoleData->isNotEmpty())
+    @php $c0 = $consoleData->first(); @endphp
     <div class="console-wrap" data-hero style="--d:300ms">
-      <div class="console" data-console aria-roledescription="carousel" aria-label="Sample match analyses">
+      <script type="application/json" id="console-data">{!! json_encode($consoleData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+      <div class="console" data-console aria-roledescription="carousel" aria-label="{{ $consoleLabel }}">
         <span class="console__progress" data-progress></span>
 
         <div class="console__top">
-          <span class="console__tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></svg> Sample analysis</span>
-          <span class="console__meta"><span class="console__league"><span data-c="league">Premier League</span> · </span><span data-c="kick">Sat 18 Jan, 15:00</span></span>
+          <a class="console__tag" data-c-link href="{{ $c0['url'] }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></svg> {{ $consoleLabel }}</a>
+          <span class="console__meta"><span class="console__league"><span data-c="league">{{ $c0['league'] }}</span> · </span><span data-c="kick">{{ $c0['kick'] }}</span></span>
         </div>
 
         <div class="console__body" data-swap aria-live="polite">
           <div class="fixture">
-            <div class="team"><span class="crest" data-c="hcrest" style="--c:#1e6fb8">MCI</span><span class="team__name" data-c="home">Man City</span></div>
+            <div class="team"><span class="crest" data-c="hcrest" style="--c:{{ $c0['homeColour'] }}">{{ $c0['homeCrest'] }}</span><span class="team__name" data-c="home">{{ $c0['home'] }}</span></div>
             <span class="fixture__vs">vs</span>
-            <div class="team team--away"><span class="crest" data-c="acrest" style="--c:#c1121f">ARS</span><span class="team__name" data-c="away">Arsenal</span></div>
+            <div class="team team--away"><span class="crest" data-c="acrest" style="--c:{{ $c0['awayColour'] }}">{{ $c0['awayCrest'] }}</span><span class="team__name" data-c="away">{{ $c0['away'] }}</span></div>
           </div>
 
           <div class="prob">
             <div class="prob__labels">
-              <span>Home <b class="num" data-p="h">48%</b></span>
-              <span>Draw <b class="num" data-p="d">26%</b></span>
-              <span>Away <b class="num" data-p="a">26%</b></span>
+              <span>Model read <b data-c="market">{{ $c0['market'] }}</b></span>
+              <span><b class="num" data-c="pct">{{ $c0['pct'] }}%</b></span>
             </div>
             <div class="prob__bar" aria-hidden="true">
-              <i class="prob__seg prob__seg--h" data-pb="h" style="flex-basis:48%"></i>
-              <i class="prob__seg prob__seg--d" data-pb="d" style="flex-basis:26%"></i>
-              <i class="prob__seg prob__seg--a" data-pb="a" style="flex-basis:26%"></i>
+              <i class="prob__seg prob__seg--h" data-pb="read" style="flex-basis:{{ $c0['pct'] }}%"></i>
+              <i class="prob__seg prob__seg--d" data-pb="rest" style="flex-basis:{{ 100 - $c0['pct'] }}%"></i>
             </div>
           </div>
 
           <div class="xg">
             <div class="xg__head">
-              <span class="cap">Cumulative xG, season avg.</span>
-              <span class="xg__legend"><span class="key key--h"></span><b class="num" data-c="hxg">2.14</b><span class="key key--a"></span><b class="num" data-c="axg">1.71</b></span>
+              <span class="cap">Projected goals (xG)</span>
+              <span class="xg__legend"><span class="key key--h"></span><b class="num" data-c="hxg">{{ number_format($c0['xgHome'], 2) }}</b><span class="key key--a"></span><b class="num" data-c="axg">{{ number_format($c0['xgAway'], 2) }}</b></span>
             </div>
-            <svg class="xg__chart" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true">
-              <defs><linearGradient id="xgfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563eb" stop-opacity=".16"/><stop offset="1" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
-              <g class="xg__grid"><path d="M10 12.7H310M10 43.3H310M10 73.7H310"/><path d="M10 104H310"/></g>
-              <path class="xg__area" data-xg="area" d=""/>
-              <path class="xg__line xg__line--a" data-xg="a" d=""/>
-              <path class="xg__line xg__line--h" data-xg="h" d=""/>
-            </svg>
-            <div class="xg__axis num"><span>0'</span><span>45'</span><span>90'</span></div>
+            @php $xgT = max($c0['xgHome'] + $c0['xgAway'], 0.01); @endphp
+            <div class="split"><i data-sb="xgh" style="flex-basis:{{ $c0['xgHome'] / $xgT * 100 }}%"></i><i data-sb="xga" style="flex-basis:{{ $c0['xgAway'] / $xgT * 100 }}%"></i></div>
           </div>
 
           <div class="cstats">
-            <div class="cstat">
-              <div class="cstat__head"><b class="num" data-s="0h">58%</b><span>Possession</span><b class="num" data-s="0a">42%</b></div>
-              <div class="split"><i data-sb="0h" style="flex-basis:58%"></i><i data-sb="0a" style="flex-basis:42%"></i></div>
-            </div>
-            <div class="cstat">
-              <div class="cstat__head"><b class="num" data-s="1h">16.2</b><span>Shots / game</span><b class="num" data-s="1a">12.4</b></div>
-              <div class="split"><i data-sb="1h" style="flex-basis:57%"></i><i data-sb="1a" style="flex-basis:43%"></i></div>
-            </div>
             <div class="cform">
-              <span class="pills" data-form="h"></span><span class="cap">Last 5</span><span class="pills" data-form="a"></span>
+              <span class="pills" data-form="h" data-pills="{{ $c0['form'][0] }}"></span><span class="cap">Last 5</span><span class="pills" data-form="a" data-pills="{{ $c0['form'][1] }}"></span>
             </div>
           </div>
         </div>
 
         <div class="console__foot">
-          <span>Lean <b data-c="lean">Home edge</b></span>
-          <span class="conf-wrap">Confidence <span class="conf" data-conf role="img" aria-label="Confidence 3 of 5"><i></i><i></i><i></i><i></i><i></i></span></span>
+          <span>Verdict <b data-c="verdict">{{ $c0['verdict'] }}</b></span>
+          <span>Odds <b class="num" data-c="odds">{{ $c0['odds'] }}</b></span>
         </div>
       </div>
 
@@ -129,23 +116,26 @@
         </button>
       </div>
     </div>
+    @endif
   </div>
 </section>
 
 <!-- ============ LEAGUES MARQUEE ============ -->
+@if ($leagues->isNotEmpty())
 <section class="leagues" aria-label="Competitions covered">
-  <p class="leagues__cap">Analysis across 15 competitions</p>
+  <p class="leagues__cap">Analysis across {{ $leagues->count() }} competitions</p>
   <div class="leagues__viewport">
     <div class="leagues__track">
       <ul class="leagues__list">
-        <li>Premier League</li><li>La Liga</li><li>Bundesliga</li><li>Serie A</li><li>Ligue 1</li><li>Champions League</li><li>Europa League</li><li>Eredivisie</li><li>Primeira Liga</li><li>Championship</li>
+        @foreach ($leagues as $l)<li>{{ $l }}</li>@endforeach
       </ul>
       <ul class="leagues__list" aria-hidden="true">
-        <li>Premier League</li><li>La Liga</li><li>Bundesliga</li><li>Serie A</li><li>Ligue 1</li><li>Champions League</li><li>Europa League</li><li>Eredivisie</li><li>Primeira Liga</li><li>Championship</li>
+        @foreach ($leagues as $l)<li>{{ $l }}</li>@endforeach
       </ul>
     </div>
   </div>
 </section>
+@endif
 
 <!-- ============ METHOD ============ -->
 <section class="section" id="method" data-track-section="method">
@@ -160,26 +150,26 @@
       <article class="step" data-spot>
         <span class="step__num num">01</span>
         <span class="step__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="M3 3v18h18"/><path pathLength="1" d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/></svg></span>
-        <h3>Statistical profile</h3>
-        <p>xG, shot quality, possession and pressing — across the season and the last ten matches.</p>
+        <h3>Projected goals (xG)</h3>
+        <p>Models trained on many seasons of results across 20+ leagues project expected goals for both sides.</p>
       </article>
       <article class="step" data-spot>
         <span class="step__num num">02</span>
         <span class="step__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
-        <h3>Form &amp; momentum</h3>
-        <p>Rolling form weighted by opponent strength, with home and away splits.</p>
+        <h3>Recent form</h3>
+        <p>Last-five results for both teams, so you can see how each side is actually playing right now.</p>
       </article>
       <article class="step" data-spot>
         <span class="step__num num">03</span>
         <span class="step__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="M4 8h14l-4-4M20 16H6l4 4"/></svg></span>
         <h3>Head-to-head</h3>
-        <p>How this fixture has historically unfolded, and the tactical patterns behind it.</p>
+        <p>Where two sides show a consistent pattern across past meetings, we flag it — and say so when the sample is small.</p>
       </article>
       <article class="step" data-spot>
         <span class="step__num num">04</span>
         <span class="step__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="M8 3h8l4 4v14H4V3h4"/><path pathLength="1" d="M8 12h8M8 16h5"/></svg></span>
-        <h3>Team news</h3>
-        <p>Injuries, suspensions, rotation risk and fixture congestion before kickoff.</p>
+        <h3>Calibrated probability</h3>
+        <p>Every read carries a probability checked against how often similar reads came true. Only clear reads get published.</p>
       </article>
     </div>
   </div>
@@ -223,7 +213,7 @@
               </div>
             </div>
             <p class="match__text">Top market from our calibrated scan: <strong>{{ $p->market }}</strong> at {{ number_format($p->predicted_probability * 100, 1) }}%.</p>
-            <a class="match__link" href="{{ route('analysis') }}">Read analysis <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="match__link" href="{{ $p->fixtureUrl() ?? route('analysis') }}">Read analysis <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </article>
         @endforeach
       </div>
@@ -269,7 +259,7 @@
         </div>
 
         <dl class="tallies">
-          <div class="tally"><dt>Analysed</dt><dd class="num" data-count="{{ $analysed }}">{{ $analysed }}</dd><span class="tally__bar"><i style="width:100%"></i></span></div>
+          <div class="tally"><dt>Graded</dt><dd class="num" data-count="{{ $analysed }}">{{ $analysed }}</dd><span class="tally__bar"><i style="width:100%"></i></span></div>
           <div class="tally tally--pos"><dt>Aligned</dt><dd class="num" data-count="{{ $aligned }}">{{ $aligned }}</dd><span class="tally__bar"><i style="width:{{ $pct }}%"></i></span></div>
           <div class="tally tally--miss"><dt>Unexpected</dt><dd class="num" data-count="{{ $unexpected }}">{{ $unexpected }}</dd><span class="tally__bar"><i style="width:{{ $missPct }}%"></i></span></div>
         </dl>
@@ -312,11 +302,7 @@
       <article class="connect-card" data-spot>
         <span class="connect-card__icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg></span>
         <h3>The LSA mobile app</h3>
-        <p>Match analysis, results and kickoff alerts in your pocket.</p>
-        <div class="stores">
-          <a class="store" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span><small>Download on the</small>App Store</span></a>
-          <a class="store" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span><small>Get it on</small>Google Play</span></a>
-        </div>
+        <p>Match analysis, results and kickoff alerts in your pocket. <strong>Coming soon</strong> — join the Telegram channel to hear first when it launches.</p>
         <ul class="minilist">
           <li>Kickoff and result notifications</li>
           <li>Offline access to saved analysis</li>
@@ -328,7 +314,7 @@
         <span class="connect-card__icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 3.5 10.5 14.5"/><path d="M21.5 3.5 14.5 21l-4-6.5-7-4z"/></svg></span>
         <h3>The Telegram channel</h3>
         <p>Previews before kickoff, results after full time, and discussion with other followers.</p>
-        <a class="btn btn--primary btn--block" href="#">Join on Telegram
+        <a class="btn btn--primary btn--block" href="{{ config('lsa.telegram_url') }}" rel="noopener" target="_blank">Join on Telegram
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
         <dl class="facts">

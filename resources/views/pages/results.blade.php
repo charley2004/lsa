@@ -61,7 +61,7 @@
                         </div>
 
                         <dl class="tallies">
-                            <div class="tally"><dt>Analysed</dt><dd class="num" data-count="{{ $settledCount }}">{{ $settledCount }}</dd><span class="tally__bar"><i style="width:100%"></i></span></div>
+                            <div class="tally"><dt>Graded</dt><dd class="num" data-count="{{ $settledCount }}">{{ $settledCount }}</dd><span class="tally__bar"><i style="width:100%"></i></span></div>
                             <div class="tally tally--pos"><dt>Aligned</dt><dd class="num" data-count="{{ $hits }}">{{ $hits }}</dd><span class="tally__bar"><i style="width:{{ $rate }}%"></i></span></div>
                             <div class="tally tally--miss"><dt>Unexpected</dt><dd class="num" data-count="{{ $misses }}">{{ $misses }}</dd><span class="tally__bar"><i style="width:{{ 100 - $rate }}%"></i></span></div>
                         </dl>

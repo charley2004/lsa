@@ -62,12 +62,12 @@
 
             <div class="steps steps--3" data-stagger>
                 @foreach ([
-                    ['Form analysis', 'Performance over the last 5–10 matches: results, scoring patterns, defensive stability and momentum.', '<path pathLength="1" d="M3 12h4l3-8 4 16 3-8h4"/>'],
-                    ['Statistical review', 'Goals for and against, possession, shots on target, expected goals (xG), and home and away records.', '<path pathLength="1" d="M3 3v18h18"/><path pathLength="1" d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/>'],
-                    ['Head-to-head history', 'Previous meetings often reveal patterns and tendencies, along with notable tactical factors.', '<path pathLength="1" d="M4 8h14l-4-4M20 16H6l4 4"/>'],
-                    ['Team news & context', 'Injuries, suspensions, tactical changes, managerial situations and motivation.', '<path pathLength="1" d="M8 3h8l4 4v14H4V3h4"/><path pathLength="1" d="M8 12h8M8 16h5"/>'],
-                    ['Tactical considerations', 'How each side sets up, where their strengths lie, and the dynamics their styles create.', '<circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M12 3v18M3 12h4M17 12h4"/>'],
-                    ['Multiple perspectives', 'Rather than one conclusion, we set out several scenarios. Football is complex and unpredictable.', '<circle pathLength="1" cx="12" cy="12" r="3"/><path pathLength="1" d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/>'],
+                    ['Form analysis', 'Last-five results for both teams, so you can see how each side is actually playing right now.', '<path pathLength="1" d="M3 12h4l3-8 4 16 3-8h4"/>'],
+                    ['Projected goals (xG)', 'Models trained on many seasons of results across 20+ leagues estimate expected goals for both sides.', '<path pathLength="1" d="M3 3v18h18"/><path pathLength="1" d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/>'],
+                    ['Head-to-head history', 'Where previous meetings show a consistent pattern we flag it, and say so plainly when the sample is small.', '<path pathLength="1" d="M4 8h14l-4-4M20 16H6l4 4"/>'],
+                    ['Calibrated probability', 'Each read carries a probability checked against how often similar reads actually came true.', '<path pathLength="1" d="M8 3h8l4 4v14H4V3h4"/><path pathLength="1" d="M8 12h8M8 16h5"/>'],
+                    ['Market selection', 'The model scans goals, result, double-chance, BTTS, corners and cards markets, and publishes only clear reads.', '<circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M12 3v18M3 12h4M17 12h4"/>'],
+                    ['Graded in public', 'Every read is graded after full time and stays on the results ledger — hits and misses alike.', '<circle pathLength="1" cx="12" cy="12" r="3"/><path pathLength="1" d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/>'],
                 ] as $i => [$title, $desc, $icon])
                     <article class="step" data-spot>
                         <span class="step__num num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>

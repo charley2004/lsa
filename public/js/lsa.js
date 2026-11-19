@@ -129,39 +129,10 @@
     /* ---------- Hero analysis console ---------- */
     const consoleEl = $('[data-console]');
     if (consoleEl) {
-        // Sample data. Replace with your own fixtures (or fetch from your backend).
-        const FIXTURES = [
-            {
-                league: 'Premier League', kick: 'Sat 18 Jan, 15:00',
-                home: { n: 'Man City', s: 'MCI', c: '#1e6fb8' },
-                away: { n: 'Arsenal',  s: 'ARS', c: '#c1121f' },
-                prob: [48, 26, 26],
-                xg: { h: [0, .18, .41, .66, .9, 1.12, 1.38, 1.62, 1.9, 2.14], a: [0, .1, .28, .4, .62, .8, 1.02, 1.25, 1.48, 1.71] },
-                stats: [['Possession', 58, 42, '%'], ['Shots / game', 16.2, 12.4, '']],
-                form: ['WWDWL', 'WDWWW'],
-                lean: 'Home edge', conf: 3,
-            },
-            {
-                league: 'La Liga', kick: 'Sun 19 Jan, 20:00',
-                home: { n: 'Real Madrid', s: 'RMA', c: '#4c1d95' },
-                away: { n: 'Barcelona',   s: 'BAR', c: '#a50044' },
-                prob: [41, 24, 35],
-                xg: { h: [0, .22, .4, .61, .83, 1.05, 1.31, 1.55, 1.8, 2.05], a: [0, .2, .44, .63, .81, 1.02, 1.24, 1.47, 1.7, 1.92] },
-                stats: [['Possession', 47, 53, '%'], ['Shots / game', 15.1, 15.8, '']],
-                form: ['WWWDW', 'WWLWW'],
-                lean: 'Open game', conf: 2,
-            },
-            {
-                league: 'Bundesliga', kick: 'Fri 17 Jan, 19:30',
-                home: { n: 'Bayern', s: 'BAY', c: '#c8102e' },
-                away: { n: 'Dortmund', s: 'BVB', c: '#f5c400', t: '#0b1220' },
-                prob: [55, 22, 23],
-                xg: { h: [0, .3, .55, .84, 1.1, 1.38, 1.7, 1.98, 2.3, 2.6], a: [0, .12, .3, .44, .63, .8, .98, 1.18, 1.4, 1.6] },
-                stats: [['Possession', 61, 39, '%'], ['Shots / game', 18.3, 12.9, '']],
-                form: ['WWWWD', 'WLWDW'],
-                lean: 'Home edge, goals', conf: 3,
-            },
-        ];
+        // Real fixtures, rendered into the page by HomeController (the same
+        // data the Analysis page shows). The first one is already server-rendered.
+        let FIXTURES = [];
+        try { FIXTURES = JSON.parse(($('#console-data') || {}).textContent || '[]'); } catch (e) { FIXTURES = []; }
 
         const body     = $('[data-swap]', consoleEl);
         const progress = $('[data-progress]', consoleEl);
@@ -173,71 +144,49 @@
         let paused = reduceMotion;  // no auto-rotation for reduced-motion users
         let hoverHold = false;
 
-        const X = (i) => 10 + i * (300 / 9);
-        const Y = (v) => 104 - (v / 3) * 91.3;
-        const stepPath = (arr) => arr.reduce((acc, v, i) => i === 0 ? `M${X(0)} ${Y(v)}` : `${acc} H${X(i)} V${Y(v)}`, '');
-
         const setText = (key, val) => $$(`[data-c="${key}"]`, consoleEl).forEach((el) => { el.textContent = val; });
-        const fmt = (v, unit) => (Number.isInteger(v) ? v : v.toFixed(1)) + unit;
 
         const dots = FIXTURES.map((f, i) => {
             const b = d.createElement('button');
             b.type = 'button';
             b.className = 'console__dot';
-            b.setAttribute('aria-label', `Show ${f.home.n} vs ${f.away.n}`);
+            b.setAttribute('aria-label', `Show ${f.home} vs ${f.away}`);
             b.addEventListener('click', () => go(i, true));
             dotsWrap.append(b);
             return b;
         });
 
-        const drawLines = () => {
-            $$('[data-xg]', consoleEl).forEach((p) => {
-                p.classList.remove('is-drawing');
-                void p.getBoundingClientRect();  // restart animation
-                if (!reduceMotion) p.classList.add('is-drawing');
-            });
-        };
-
         const render = (f) => {
             setText('league', f.league);
             setText('kick', f.kick);
-            setText('home', f.home.n);
-            setText('away', f.away.n);
+            setText('home', f.home);
+            setText('away', f.away);
+            setText('market', f.market);
+            setText('pct', f.pct + '%');
+            setText('hxg', f.xgHome.toFixed(2));
+            setText('axg', f.xgAway.toFixed(2));
+            setText('verdict', f.verdict);
+            setText('odds', f.odds);
+
+            const link = $('[data-c-link]', consoleEl);
+            if (link) link.href = f.url;
 
             const hc = $('[data-c="hcrest"]', consoleEl);
             const ac = $('[data-c="acrest"]', consoleEl);
-            hc.textContent = f.home.s; hc.style.setProperty('--c', f.home.c); hc.style.setProperty('--t', f.home.t || '#fff');
-            ac.textContent = f.away.s; ac.style.setProperty('--c', f.away.c); ac.style.setProperty('--t', f.away.t || '#fff');
+            hc.textContent = f.homeCrest; hc.style.setProperty('--c', f.homeColour);
+            ac.textContent = f.awayCrest; ac.style.setProperty('--c', f.awayColour);
 
-            ['h', 'd', 'a'].forEach((k, i) => {
-                $(`[data-p="${k}"]`, consoleEl).textContent = f.prob[i] + '%';
-                $(`[data-pb="${k}"]`, consoleEl).style.flexBasis = f.prob[i] + '%';
-            });
+            $('[data-pb="read"]', consoleEl).style.flexBasis = f.pct + '%';
+            $('[data-pb="rest"]', consoleEl).style.flexBasis = (100 - f.pct) + '%';
 
-            $('[data-xg="h"]', consoleEl).setAttribute('d', stepPath(f.xg.h));
-            $('[data-xg="a"]', consoleEl).setAttribute('d', stepPath(f.xg.a));
-            $('[data-xg="area"]', consoleEl).setAttribute('d', `${stepPath(f.xg.h)} V104 H${X(0)} Z`);
-            setText('hxg', f.xg.h.at(-1).toFixed(2));
-            setText('axg', f.xg.a.at(-1).toFixed(2));
-
-            f.stats.forEach(([label, h, a, unit], i) => {
-                const total = h + a;
-                $(`[data-s="${i}h"]`, consoleEl).textContent = fmt(h, unit);
-                $(`[data-s="${i}a"]`, consoleEl).textContent = fmt(a, unit);
-                $(`[data-sb="${i}h"]`, consoleEl).style.flexBasis = (h / total * 100) + '%';
-                $(`[data-sb="${i}a"]`, consoleEl).style.flexBasis = (a / total * 100) + '%';
-            });
+            const xgT = Math.max(f.xgHome + f.xgAway, 0.01);
+            $('[data-sb="xgh"]', consoleEl).style.flexBasis = (f.xgHome / xgT * 100) + '%';
+            $('[data-sb="xga"]', consoleEl).style.flexBasis = (f.xgAway / xgT * 100) + '%';
 
             renderPills($('[data-form="h"]', consoleEl), f.form[0]);
             renderPills($('[data-form="a"]', consoleEl), f.form[1]);
 
-            setText('lean', f.lean);
-            const conf = $('[data-conf]', consoleEl);
-            conf.setAttribute('aria-label', `Confidence ${f.conf} of 5`);
-            $$('i', conf).forEach((bar, i) => { bar.style.setProperty('--n', i); bar.classList.toggle('on', i < f.conf); });
-
             dots.forEach((b, i) => b.setAttribute('aria-current', String(i === index)));
-            drawLines();
         };
 
         const restartProgress = () => {

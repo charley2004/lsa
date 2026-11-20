@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Prediction;
 use App\Services\BundleBuilder;
+use App\Services\IndexNow;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,8 +56,9 @@ class PredictionSyncController extends Controller
 
         $created = 0;
         $updated = 0;
+        $changedUrls = [];  // fixture pages that are new or actually changed -> IndexNow
 
-        DB::transaction(function () use ($data, &$created, &$updated) {
+        DB::transaction(function () use ($data, &$created, &$updated, &$changedUrls) {
             foreach ($data['predictions'] as $row) {
                 unset($row['id']); // the algorithm's own ledger id — not ours, not stored
 
@@ -80,9 +82,13 @@ class PredictionSyncController extends Controller
                 if ($prediction) {
                     $prediction->update($row);
                     $updated++;
+                    if ($prediction->wasChanged()) {
+                        $changedUrls[] = $prediction->fixtureUrl();
+                    }
                 } else {
-                    Prediction::create($row + ['logged_at' => $row['logged_at'] ?? now()]);
+                    $new = Prediction::create($row + ['logged_at' => $row['logged_at'] ?? now()]);
                     $created++;
+                    $changedUrls[] = $new->fixtureUrl();
                 }
             }
         });
@@ -95,7 +101,15 @@ class PredictionSyncController extends Controller
         // transaction's atomicity.
         app(BundleBuilder::class)->rebuild();
 
-        return response()->json(['created' => $created, 'updated' => $updated]);
+        // Tell search engines about new/changed fixture pages straight away
+        // (plus the hub pages that list them), instead of anyone requesting
+        // indexing by hand. Never throws; production only.
+        $changedUrls = array_filter($changedUrls);
+        $pinged = $changedUrls
+            ? app(IndexNow::class)->submit([...$changedUrls, route('analysis'), route('results'), route('home')])
+            : 0;
+
+        return response()->json(['created' => $created, 'updated' => $updated, 'indexnow' => $pinged]);
     }
 
     // One-time maintenance action: every row synced before the kickoff-timezone

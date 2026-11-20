@@ -16,4 +16,9 @@ return [
     'display_timezone' => env('LSA_DISPLAY_TIMEZONE', 'Africa/Lagos'),
 
     'telegram_url' => env('LSA_TELEGRAM_URL', 'https://t.me/+8Khvrbv71dZkNTc0'),
+    // IndexNow: notifies Bing/DuckDuckGo/Yandex of new or changed fixture pages
+    // on every sync (App\Services\IndexNow). The key is public by design: it is
+    // served at /{key}.txt to prove site ownership. Production only by default.
+    'indexnow_key' => env('INDEXNOW_KEY', 'd42dca6608ab67b3c36f3eab3271b2ba'),
+    'indexnow_enabled' => env('INDEXNOW_ENABLED', env('APP_ENV') === 'production'),
 ];

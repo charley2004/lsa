@@ -29,6 +29,11 @@ Route::post('/contact', [ContactController::class, 'store'])
 
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+// IndexNow ownership proof: the key file search engines fetch to verify a submission.
+Route::get('/{indexnowKey}.txt', function (string $indexnowKey) {
+    abort_unless(hash_equals((string) config('lsa.indexnow_key'), $indexnowKey), 404);
+    return response($indexnowKey, 200)->header('Content-Type', 'text/plain');
+})->where('indexnowKey', '[A-Za-z0-9-]{8,128}')->name('indexnow.key');
 
 // Affiliate click-through — counts the click, then redirects to the real bookmaker URL.
 Route::get('/go/{slug}', [BookmakerOfferController::class, 'go'])->name('offer.go');

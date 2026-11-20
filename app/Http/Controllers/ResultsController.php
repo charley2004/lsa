@@ -10,7 +10,8 @@ class ResultsController extends Controller
     {
         $track = Prediction::trackRecord();
         $settled = Prediction::settled()->orderByDesc('kickoff')->limit(50)->get();
+        $perf = Prediction::performance();
 
-        return view('pages.results', compact('track', 'settled'));
+        return view('pages.results', compact('track', 'settled', 'perf'));
     }
 }

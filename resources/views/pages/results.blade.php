@@ -83,6 +83,74 @@
         </div>
     </section>
 
+    <!-- Return & calibration: the numbers a hit rate alone hides -->
+    @if ($perf['n'] > 0)
+    @php
+        $pct = fn ($v, $d = 0) => $v === null ? '—' : number_format($v * 100, $d) . '%';
+        $signed = fn ($v, $d = 1) => $v === null ? '—' : ($v > 0 ? '+' : '') . number_format($v * 100, $d) . '%';
+    @endphp
+    <section class="section section--soft" id="return" data-track-section="return">
+        <div class="container">
+            <header class="section-head" data-reveal>
+                <p class="kicker">Return &amp; calibration</p>
+                <h2 class="h2">What the hit rate doesn't tell you.</h2>
+                <p class="lede">A hit rate on its own can mislead: picks at short odds need a high hit rate just to break even. So we also publish the return at the odds we showed, using flat one-unit stakes on every priced read, plus whether our probabilities match what actually happened. Every settled read is included.</p>
+            </header>
+
+            <dl class="facts" data-reveal style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));row-gap:20px">
+                <div><dt>Priced reads</dt><dd class="num">{{ $perf['n_priced'] }}</dd></div>
+                <div><dt>Hit rate (priced)</dt><dd class="num">{{ $pct($perf['priced_hit_rate'], 1) }}</dd></div>
+                <div><dt>Average odds</dt><dd class="num">{{ $perf['avg_odds'] ? number_format($perf['avg_odds'], 2) : '—' }}</dd></div>
+                <div><dt>Break-even hit rate</dt><dd class="num">{{ $pct($perf['breakeven'], 1) }}</dd></div>
+                <div><dt>Return on stakes</dt><dd class="num">{{ $signed($perf['roi']) }}</dd></div>
+                <div><dt>Units (1 per read)</dt><dd class="num">{{ $perf['n_priced'] ? ($perf['units'] > 0 ? '+' : '') . number_format($perf['units'], 2) : '—' }}</dd></div>
+            </dl>
+            <p class="read__odds-note" style="margin-top:16px">Return covers reads with a real bookmaker price at the time of publishing ({{ $perf['n_priced'] }} of {{ $perf['n'] }}). Corners, cards and Asian handicap reads have no price on the books we read, so they count towards the hit rate but not the return. Past results don't predict future ones. 18+.</p>
+
+            @if ($perf['markets']->isNotEmpty())
+            <h3 style="margin-top:48px;font-size:1.25rem;font-weight:600;letter-spacing:-0.02em">By market</h3>
+            <div class="rtable-wrap" style="margin-top:16px">
+                <table class="rtable">
+                    <thead><tr><th scope="col">Market</th><th scope="col">Reads</th><th scope="col">Hit rate</th><th scope="col">Our average probability</th><th scope="col">Return (priced)</th></tr></thead>
+                    <tbody>
+                        @foreach ($perf['markets'] as $m)
+                            <tr>
+                                <td class="c-factor" data-label="Market">{{ $m['market'] }}</td>
+                                <td class="num" data-label="Reads">{{ $m['n'] }}</td>
+                                <td class="num" data-label="Hit rate">{{ $pct($m['hit_rate']) }}</td>
+                                <td class="num" data-label="Our probability">{{ $pct($m['predicted']) }}</td>
+                                <td class="num" data-label="Return">@if ($m['roi'] !== null){{ $signed($m['roi']) }} <span style="color:var(--text-3)">({{ $m['priced'] }})</span>@else<span style="color:var(--text-3)">not priced</span>@endif</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="read__odds-note" style="margin-top:8px">Markets with at least 5 settled reads.</p>
+            @endif
+
+            @if ($perf['calibration']->isNotEmpty())
+            <h3 style="margin-top:48px;font-size:1.25rem;font-weight:600;letter-spacing:-0.02em">Calibration: did our probabilities hold up?</h3>
+            <div class="rtable-wrap" style="margin-top:16px">
+                <table class="rtable">
+                    <thead><tr><th scope="col">We said</th><th scope="col">Reads</th><th scope="col">Average stated</th><th scope="col">Actually landed</th></tr></thead>
+                    <tbody>
+                        @foreach ($perf['calibration'] as $b)
+                            <tr>
+                                <td class="c-factor" data-label="We said">{{ $b['label'] }}</td>
+                                <td class="num" data-label="Reads">{{ $b['n'] }}</td>
+                                <td class="num" data-label="Stated">{{ $pct($b['predicted']) }}</td>
+                                <td class="num" data-label="Landed">{{ $pct($b['actual']) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="read__odds-note" style="margin-top:8px">For a well-calibrated model, "Actually landed" tracks "Average stated". Where it lands lower, our probabilities were too confident for that band.</p>
+            @endif
+        </div>
+    </section>
+    @endif
+
     <!-- Ledger table -->
     <section class="section" id="ledger">
         <div class="container">

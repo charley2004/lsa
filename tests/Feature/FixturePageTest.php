@@ -164,4 +164,28 @@ class FixturePageTest extends TestCase
             $this->assertStringNotContainsString($bad, $html, "homepage still contains: {$bad}");
         }
     }
+
+    public function test_results_page_publishes_return_at_the_odds_shown(): void
+    {
+        // 2 priced hits at 1.50 and 2 priced misses: +1.0 - 2 = -1.0 units over 4 = -25%
+        foreach ([[true, 1.5], [true, 1.5], [false, 1.5], [false, 1.5]] as $i => [$hit, $odds]) {
+            $this->fixture([
+                'home' => "Home{$i}", 'away' => "Away{$i}", 'market' => 'Home win', 'odds' => $odds,
+                'predicted_probability' => 0.72, 'kickoff' => Carbon::parse('2020-11-21 15:00:00'),
+                'settled_at' => now(), 'home_goals' => 1, 'away_goals' => 0, 'hit' => $hit,
+            ]);
+        }
+
+        $perf = Prediction::performance();
+        $this->assertSame(4, $perf['n_priced']);
+        $this->assertEqualsWithDelta(-1.0, $perf['units'], 1e-9);
+        $this->assertEqualsWithDelta(-0.25, $perf['roi'], 1e-9);
+        $this->assertEqualsWithDelta(1 / 1.5, $perf['breakeven'], 1e-9);
+
+        $this->get(route('results'))->assertOk()
+            ->assertSee('Return on stakes')
+            ->assertSee('-25.0%')
+            ->assertSee('66.7%')
+            ->assertSee('Calibration: did our probabilities hold up?');
+    }
 }

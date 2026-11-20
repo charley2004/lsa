@@ -250,6 +250,69 @@ class Prediction extends Model
     }
 
     /**
+     * Profitability and calibration, computed from every settled read.
+     *
+     * A hit rate on its own misleads: 66% at average odds of 1.50 loses money,
+     * because those odds need a 67% hit rate just to break even. So this
+     * also reports the return at the odds we showed (flat 1-unit stakes, for
+     * priced reads only), the break-even hit rate those odds imply, a
+     * per-market split, and calibration (did reads we called "70%" land
+     * about 70% of the time?). Nothing is filtered or cherry-picked.
+     */
+    public static function performance(): array
+    {
+        $settled = static::settled()->whereNotNull('hit')
+            ->get(['market', 'predicted_probability', 'odds', 'hit']);
+
+        $priced = $settled->filter(fn ($p) => $p->odds !== null && $p->odds > 1);
+        $units = $priced->sum(fn ($p) => $p->hit ? $p->odds - 1 : -1);
+
+        $roiOf = function ($rows) {
+            $rows = $rows->filter(fn ($p) => $p->odds !== null && $p->odds > 1);
+            return $rows->count() ? $rows->sum(fn ($p) => $p->hit ? $p->odds - 1 : -1) / $rows->count() : null;
+        };
+
+        $markets = $settled->groupBy('market')
+            ->map(fn ($rows, $market) => [
+                'market' => $market,
+                'n' => $rows->count(),
+                'hit_rate' => $rows->where('hit', true)->count() / $rows->count(),
+                'predicted' => $rows->avg('predicted_probability'),
+                'priced' => $rows->filter(fn ($p) => $p->odds !== null)->count(),
+                'roi' => $roiOf($rows),
+            ])
+            ->filter(fn ($m) => $m['n'] >= 5)
+            ->sortByDesc('n')
+            ->values();
+
+        $buckets = collect([[0.5, 0.6], [0.6, 0.7], [0.7, 0.8], [0.8, 0.9], [0.9, 1.01]])
+            ->map(function ($b) use ($settled) {
+                $rows = $settled->filter(fn ($p) => $p->predicted_probability >= $b[0] && $p->predicted_probability < $b[1]);
+                return [
+                    'label' => (int) round($b[0] * 100) . '–' . min(100, (int) round($b[1] * 100)) . '%',
+                    'n' => $rows->count(),
+                    'predicted' => $rows->count() ? $rows->avg('predicted_probability') : null,
+                    'actual' => $rows->count() ? $rows->where('hit', true)->count() / $rows->count() : null,
+                ];
+            })
+            ->filter(fn ($b) => $b['n'] > 0)
+            ->values();
+
+        return [
+            'n' => $settled->count(),
+            'hit_rate' => $settled->count() ? $settled->where('hit', true)->count() / $settled->count() : null,
+            'n_priced' => $priced->count(),
+            'priced_hit_rate' => $priced->count() ? $priced->where('hit', true)->count() / $priced->count() : null,
+            'avg_odds' => $priced->count() ? $priced->avg('odds') : null,
+            'breakeven' => $priced->count() ? $priced->avg(fn ($p) => 1 / $p->odds) : null,
+            'units' => $units,
+            'roi' => $priced->count() ? $units / $priced->count() : null,
+            'markets' => $markets,
+            'calibration' => $buckets,
+        ];
+    }
+
+    /**
      * The real, live track record — mirrors agent/ledger.py's track_record().
      */
     public static function trackRecord(): array

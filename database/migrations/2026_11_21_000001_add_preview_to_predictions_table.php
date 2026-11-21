@@ -12,6 +12,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('predictions', 'preview')) {
+            return;
+        }
         Schema::table('predictions', function (Blueprint $table) {
             $table->text('preview')->nullable()->after('h2h_note');
         });

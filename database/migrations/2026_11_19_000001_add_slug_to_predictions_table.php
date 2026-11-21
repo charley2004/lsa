@@ -15,12 +15,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('predictions', function (Blueprint $table) {
-            $table->string('slug')->nullable()->after('away')->index();
-        });
+        // Guarded so a half-finished earlier run can't block every later deploy.
+        if (! Schema::hasColumn('predictions', 'slug')) {
+            Schema::table('predictions', function (Blueprint $table) {
+                $table->string('slug')->nullable()->after('away')->index();
+            });
+        }
 
         // Backfill existing rows with the same rule new rows get.
-        DB::table('predictions')->orderBy('id')->select('id', 'home', 'away', 'kickoff')
+        DB::table('predictions')->whereNull('slug')->orderBy('id')->select('id', 'home', 'away', 'kickoff')
             ->chunkById(500, function ($rows) {
                 foreach ($rows as $row) {
                     DB::table('predictions')->where('id', $row->id)->update([

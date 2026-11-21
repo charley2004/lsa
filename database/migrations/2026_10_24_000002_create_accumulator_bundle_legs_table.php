@@ -12,6 +12,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Production (MySQL) has this table from an earlier run that created it and
+        // then failed before Laravel recorded the migration, so every deploy since
+        // stopped here (and never reached the later migrations or `artisan optimize`).
+        // Skip when it already exists; the app only needs the table and its columns.
+        if (Schema::hasTable('accumulator_bundle_legs')) {
+            return;
+        }
+
         Schema::create('accumulator_bundle_legs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('accumulator_bundle_id')->constrained()->cascadeOnDelete();

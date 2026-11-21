@@ -148,6 +148,18 @@
                 </div>
             </article>
 
+            <!-- Match preview (algorithm/agent/llm.py: model numbers + latest team news) -->
+            @php $preview = $reads->pluck('preview')->filter()->first(); @endphp
+            @if ($preview)
+                <div class="fx-section">
+                    <h2>Match preview</h2>
+                    <div class="acard"><div class="acard__section">
+                        <p>{{ $preview }}</p>
+                        <p class="acard__label" style="margin-top:12px">Written with AI from our model's numbers and the latest reported team news.</p>
+                    </div></div>
+                </div>
+            @endif
+
             <!-- Recent form -->
             <div class="fx-section">
                 <h2>Recent form</h2>

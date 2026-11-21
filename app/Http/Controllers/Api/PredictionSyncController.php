@@ -52,6 +52,7 @@ class PredictionSyncController extends Controller
             'predictions.*.home_form' => 'nullable|array',
             'predictions.*.away_form' => 'nullable|array',
             'predictions.*.h2h_note' => 'nullable|string',
+            'predictions.*.preview' => 'nullable|string|max:2000',
         ]);
 
         $created = 0;

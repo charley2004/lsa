@@ -15,7 +15,7 @@ class Prediction extends Model
         'verdict', 'conviction', 'skill', 'source',
         'settled_at', 'home_goals', 'away_goals',
         'home_corners', 'away_corners', 'home_cards', 'away_cards', 'hit',
-        'league', 'xg_home', 'xg_away', 'home_form', 'away_form', 'h2h_note',
+        'league', 'xg_home', 'xg_away', 'home_form', 'away_form', 'h2h_note', 'preview',
     ];
 
     protected $casts = [

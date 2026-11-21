@@ -59,6 +59,16 @@ class PagesTest extends TestCase
             ->assertDontSee('data-fixture-filters', false);
     }
 
+    public function test_results_page_labels_model_retest_as_hindsight(): void
+    {
+        $response = $this->get(route('results'));
+
+        $response->assertOk();
+        $response->assertSee('re-tested on these matches', false);
+        $response->assertSee('not picks we published at the time', false);
+        $response->assertSee('75.5%', false);
+    }
+
     public function test_results_page_shows_real_track_record(): void
     {
         Prediction::factory()->count(3)->settled(true)->create();

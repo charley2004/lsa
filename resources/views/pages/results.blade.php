@@ -151,6 +151,49 @@
     </section>
     @endif
 
+    <!-- Current model re-test (config/lsa.php model_retest): hindsight, labelled as such -->
+    @php $rt = config('lsa.model_retest'); $sgn = fn ($v) => ($v > 0 ? '+' : '') . number_format($v, 1) . '%'; @endphp
+    @if ($rt)
+    <section class="section" id="model-retest" data-track-section="model-retest">
+        <div class="container">
+            <header class="section-head" data-reveal>
+                <p class="kicker">Model update &middot; {{ $rt['date'] }}</p>
+                <h2 class="h2">Our current model, re-tested on these matches.</h2>
+                <p class="lede">On {{ $rt['date'] }} we switched to a new model. It still picks the most likely outcome, but only where the bookmaker's price isn't a bad deal. We re-ran it on {{ $rt['matches'] }} matches from this ledger using only information available before each kickoff. This is a re-test in hindsight, not picks we published at the time: the published record above is unchanged.</p>
+            </header>
+
+            <dl class="facts" data-reveal style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));row-gap:20px">
+                <div><dt>Matches re-tested</dt><dd class="num">{{ $rt['matches'] }}</dd></div>
+                <div><dt>Picks made</dt><dd class="num">{{ $rt['picks'] }}</dd></div>
+                <div><dt>Won</dt><dd class="num">{{ number_format($rt['won_pct'], 1) }}%</dd></div>
+                <div><dt>Lost</dt><dd class="num">{{ number_format($rt['lost_pct'], 1) }}%</dd></div>
+                <div><dt>Return at the odds</dt><dd class="num">{{ $sgn($rt['return_pct']) }}</dd></div>
+                <div><dt>Previous model, same ledger</dt><dd class="num">{{ number_format($rt['old_won_pct'], 1) }}% won &middot; {{ $sgn($rt['old_return_pct']) }}</dd></div>
+            </dl>
+
+            <div class="rtable-wrap" style="margin-top:32px">
+                <table class="rtable">
+                    <thead><tr><th scope="col">Tier</th><th scope="col">Picks (re-test)</th><th scope="col">Won (re-test)</th><th scope="col">Return (re-test)</th><th scope="col">Won, 2020&ndash;now backtest</th><th scope="col">Return, 2020&ndash;now backtest</th></tr></thead>
+                    <tbody>
+                        @foreach ($rt['tiers'] as $i => $t)
+                            @php $bt = $rt['backtest'][$i] ?? null; @endphp
+                            <tr>
+                                <td class="c-factor" data-label="Tier">{{ $t['name'] }}</td>
+                                <td class="num" data-label="Picks">{{ $t['picks'] }}</td>
+                                <td class="num" data-label="Won">{{ number_format($t['won_pct'], 1) }}%</td>
+                                <td class="num" data-label="Return">{{ $sgn($t['return_pct']) }}</td>
+                                <td class="num" data-label="Won (backtest)">{{ $bt ? number_format($bt['won_pct'], 1) . '%' : '—' }}</td>
+                                <td class="num" data-label="Return (backtest)">{{ $bt ? $sgn($bt['return_pct']) : '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="read__odds-note" style="margin-top:12px">Returns use flat one-unit stakes at Bet365 pre-match odds. They are negative: these picks win often, but at short odds, so a high hit rate still doesn't beat the bookmaker's margin. From {{ $rt['date'] }} every pick goes into the live ledger above, so you can check the new model's real record as it builds. Past results don't predict future ones. 18+.</p>
+        </div>
+    </section>
+    @endif
+
     <!-- Ledger table -->
     <section class="section" id="ledger">
         <div class="container">

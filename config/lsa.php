@@ -21,4 +21,29 @@ return [
     // served at /{key}.txt to prove site ownership. Production only by default.
     'indexnow_key' => env('INDEXNOW_KEY', 'd42dca6608ab67b3c36f3eab3271b2ba'),
     'indexnow_enabled' => env('INDEXNOW_ENABLED', env('APP_ENV') === 'production'),
+
+    // Re-test of the current model (algorithm engine v2, live from 21 Nov 2026) on
+    // the fixtures already in this ledger. A HINDSIGHT re-test, using only data
+    // from before each kickoff and Bet365 pre-match prices: NOT picks we published.
+    // Shown on /results in its own labelled section; the live ledger above it is
+    // untouched. Numbers from algorithm/ (CLAUDE.md decision log, 2026-11-21).
+    'model_retest' => [
+        'date' => '21 November 2026',
+        'matches' => 173,
+        'picks' => 53,
+        'won_pct' => 75.5,
+        'lost_pct' => 24.5,
+        'return_pct' => -5.0,
+        'old_won_pct' => 64.7,
+        'old_return_pct' => -12.2,
+        'tiers' => [
+            ['name' => 'Confident', 'picks' => 41, 'won_pct' => 75.6, 'return_pct' => -6.5],
+            ['name' => 'Lean', 'picks' => 12, 'won_pct' => 75.0, 'return_pct' => 0.0],
+        ],
+        // walk-forward backtest, 2020/21 season to date, every covered league
+        'backtest' => [
+            ['name' => 'Confident', 'won_pct' => 77.6, 'return_pct' => -4.1],
+            ['name' => 'Lean', 'won_pct' => 73.4, 'return_pct' => -4.0],
+        ],
+    ],
 ];

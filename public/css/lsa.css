@@ -1485,3 +1485,105 @@ html.menu-open { overflow: hidden; }
 .fx-list a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgb(29 78 216 / .3); }
 .fx-list .num { color: var(--text-3); font-size: 0.8125rem; margin-left: 8px; }
 .fx-score { font-family: var(--mono); font-size: 2rem; font-weight: 500; letter-spacing: -0.04em; }
+
+/* ---------- Combo slips (Banker 2 Odds / 10 Odds) ---------- */
+.combo-recordline { display: inline-flex; gap: 6px; margin: 18px 18px 0 0; font-size: 0.875rem; color: var(--text-2); background: var(--bg-soft); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; }
+.combo-recordline b { color: var(--text); font-weight: 600; }
+.slip { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 22px 22px 18px; box-shadow: var(--shadow); }
+.slip__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.slip__title { font-size: 1.375rem; font-weight: 600; letter-spacing: -0.02em; }
+.slip__date { margin-top: 4px; font-size: 0.8125rem; color: var(--text-3); }
+.slip__odds { text-align: right; }
+.slip__odds span { display: block; font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; color: var(--accent-ink); line-height: 1; }
+.slip__odds small { font-size: 0.625rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+.slip__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 14px; font-size: 0.8125rem; color: var(--text-2); }
+.slip__strap { margin-top: 10px; font-size: 0.875rem; color: var(--text-2); }
+.slip__status { font-size: 0.75rem; font-weight: 600; border-radius: 999px; padding: 3px 10px; background: var(--bg-soft); color: var(--text-2); border: 1px solid var(--line); }
+.slip--live .slip__status { background: #fff7e6; color: #9a5b00; border-color: #f5d9a8; }
+.slip--won { border-color: var(--pos); }
+.slip--won .slip__status { background: var(--pos); color: #fff; border-color: var(--pos); }
+.slip--lost .slip__status { background: #f1f5f9; color: var(--miss); }
+.slip__legs { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.leg { display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.leg__time { font-size: 0.8125rem; color: var(--text-3); }
+.leg__body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.leg__match { font-weight: 600; font-size: 0.9375rem; color: var(--text); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leg__match:hover { text-decoration: underline; text-underline-offset: 3px; }
+.leg__pick { font-size: 0.8125rem; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leg__pick b { color: var(--text); font-weight: 600; }
+.leg__right { display: flex; align-items: center; gap: 10px; }
+.leg__odds { font-size: 0.9375rem; font-weight: 600; min-width: 40px; text-align: right; }
+.leg__score { font-size: 0.8125rem; color: var(--text-2); }
+.leg__icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8125rem; font-weight: 700; color: #fff; }
+.leg--won .leg__icon { background: var(--pos); }
+.leg--lost .leg__icon { background: var(--neg); }
+.leg--void .leg__icon { background: var(--miss); }
+.leg--lost .leg__match { color: var(--text-2); }
+
+/* ---------- Analysis match list (scannable rows, details expand in place) ---------- */
+.section--tight { padding-top: 32px; }
+.toppicks { margin-bottom: 28px; }
+.toppicks__label { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+.toppicks__grid { display: grid; gap: 10px; }
+@media (min-width: 720px) { .toppicks__grid { grid-template-columns: repeat(3, 1fr); } }
+.toppick { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-lg); color: var(--text); text-decoration: none; box-shadow: var(--shadow); transition: border-color .2s, transform .2s; }
+.toppick:hover { border-color: var(--accent); transform: translateY(-1px); }
+.toppick__meta { font-size: 0.75rem; color: var(--text-3); }
+.toppick__match { font-weight: 600; font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toppick__pick { font-size: 0.875rem; color: var(--text-2); }
+.toppick__nums { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
+.toppick__nums b { font-size: 1.25rem; color: var(--accent-ink); }
+.toppick__nums span { font-size: 0.875rem; color: var(--text-2); }
+
+.mday + .mday { margin-top: 8px; }
+.mlist { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-xl); overflow: hidden; box-shadow: var(--shadow); }
+.mlist__head, .mrow__sum { display: grid; grid-template-columns: 48px minmax(0, 1fr) 24px; gap: 4px 12px; align-items: center; }
+.mlist__head { display: none; }
+.mleague { padding: 9px 16px; background: var(--bg-soft); border-top: 1px solid var(--line); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; color: var(--text-2); }
+.mlist > .mleague:first-of-type, .mlist__head + .mleague { border-top: 0; }
+.mrow { border-top: 1px solid var(--line); }
+.mrow__sum { padding: 12px 16px; cursor: pointer; list-style: none; }
+.mrow__sum::-webkit-details-marker { display: none; }
+.mrow__sum:hover { background: var(--bg-soft); }
+.mrow__time { grid-row: 1 / span 2; font-size: 0.8125rem; color: var(--text-3); }
+.mrow__match { display: flex; flex-direction: column; font-size: 0.9375rem; font-weight: 600; line-height: 1.3; min-width: 0; }
+.mrow__team { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mrow__pick { grid-column: 2; font-size: 0.8125rem; font-weight: 600; color: var(--accent-ink); }
+.mrow__pick small { font-weight: 500; color: var(--text-3); margin-left: 4px; }
+.mrow__prob { grid-column: 2; display: flex; align-items: center; gap: 8px; }
+.mrow__prob b { font-size: 0.8125rem; min-width: 34px; }
+.mrow__bar { flex: 1; max-width: 120px; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.mrow__bar i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.mrow__odds { grid-column: 2; font-size: 0.8125rem; color: var(--text-2); }
+.mrow__odds::before { content: "Odds "; color: var(--text-3); }
+.mrow__chev { grid-column: 3; grid-row: 1 / span 2; color: var(--text-3); transition: transform .2s; }
+.mrow[open] .mrow__chev { transform: rotate(180deg); }
+.mrow[open] .mrow__sum { background: var(--bg-soft); }
+.mrow__detail { display: grid; gap: 16px; padding: 4px 16px 18px; background: var(--bg-soft); }
+.mdet__xg { font-size: 1.125rem; margin-top: 4px; }
+.mdet__facts { display: grid; gap: 6px; margin-top: 10px; font-size: 0.8125rem; }
+.mdet__facts div { display: flex; justify-content: space-between; gap: 12px; }
+.mdet__facts dt { color: var(--text-2); }
+.mdet__h2h { font-size: 0.8125rem; color: var(--text-2); }
+.mdet__more { font-size: 0.875rem; }
+
+@media (min-width: 760px) {
+    .mlist__head, .mrow__sum { grid-template-columns: 56px minmax(0, 1.6fr) minmax(0, 1.2fr) 170px 64px 24px; }
+    .mlist__head { display: grid; padding: 10px 16px; font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); border-bottom: 1px solid var(--line); }
+    .mrow__time { grid-row: auto; }
+    .mrow__pick, .mrow__prob, .mrow__odds { grid-column: auto; }
+    .mrow__odds { text-align: right; font-size: 0.9375rem; font-weight: 600; color: var(--text); }
+    .mrow__odds::before { content: none; }
+    .mrow__chev { grid-column: auto; grid-row: auto; }
+    .mrow__detail { grid-template-columns: 1fr 1fr; padding-left: 84px; }
+    .mdet__h2h, .mdet__more { grid-column: 1 / -1; }
+}
+@media (max-width: 719px) {
+    .toppicks__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; margin: 0 calc(var(--gutter) * -1); padding: 2px var(--gutter) 6px; scrollbar-width: none; }
+    .toppicks__grid::-webkit-scrollbar { display: none; }
+    .toppick { flex: 0 0 78%; scroll-snap-align: start; }
+    .leg__match, .leg__pick { white-space: normal; }
+    .day-divider { flex-wrap: wrap; }
+    .day-divider h2 { white-space: normal; }
+    .day-divider::after { display: none; }
+}

@@ -22,6 +22,13 @@ class AccumulatorController extends Controller
             // add a new one in /admin and it shows up here automatically, no
             // code change needed.
             'stakeOffers' => BookmakerOffer::active()->get(),
+            // Combo record: every graded 2 Odds / 10 Odds slip, wins and losses.
+            'history' => AccumulatorBundle::with('legs')->graded()->limit(30)->get(),
+            'record' => collect([AccumulatorBundle::TYPE_BANKER_2, AccumulatorBundle::TYPE_ODDS_10])
+                ->mapWithKeys(fn ($t) => [$t => [
+                    'won' => AccumulatorBundle::where('type', $t)->where('status', AccumulatorBundle::STATUS_WON)->count(),
+                    'graded' => AccumulatorBundle::graded()->where('type', $t)->count(),
+                ]]),
         ]);
     }
 }

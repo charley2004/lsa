@@ -7,162 +7,140 @@ use App\Models\Prediction;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
-// Rebuilds today's Banker 2 / 10-Odds Combo / Top Weekend Picks from whatever
-// confident_pick predictions currently have real odds — called at the end of
-// every sync from the algorithm (see PredictionSyncController@store), so the
-// bundles never need a separate manual trigger. Always a full
-// delete-and-recreate per (type, date), never an incremental patch: simpler
-// to reason about, and cheap since there are only ever a handful of legs.
-//
-// Deliberately conservative throughout: every selection rule below exists to
-// avoid publishing a bundle that LOOKS complete but is actually padded with a
-// weak leg just to hit a count. A bundle that doesn't qualify today simply
-// doesn't get published today (and any stale row for it is removed) — see
-// the "set it and forget it" principle this whole pipeline was built on.
+/**
+ * Builds today's Banker 2 Odds and 10-Odds combos (plus the weekend list) from
+ * the confident picks that have real bookmaker odds, then grades past combos.
+ * Called at the end of every algorithm sync (PredictionSyncController@store).
+ *
+ * How a combo is chosen
+ *   Each combo has an odds band and a leg range:
+ *     Banker 2 Odds: combined odds 2.00-2.50, 2-5 legs (at least 2.00)
+ *     10-Odds:       combined odds 10.00-15.00, 3-12 legs (at least 10.00)
+ *   Among every combination of today's picks (one leg per fixture) whose odds
+ *   land in the band, it picks the one with the HIGHEST chance of every leg
+ *   landing, using the model's calibrated probabilities. That is an exact
+ *   search (knapsack-style dynamic programming over log-odds), not "take the
+ *   top N": the old top-two rule always produced about 1.40 odds, and the old
+ *   12-pick / 6-leg cap meant short-priced slates could never reach 10.00.
+ *
+ * Locking and grading
+ *   A combo is rebuilt freely until its first leg kicks off; from then on it
+ *   is frozen (locked_at) so the published slip never changes mid-day. After
+ *   every sync, pending combos are graded: lost as soon as any leg fails, won
+ *   when every leg has landed, so the page can show which combos landed.
+ *   Nothing is ever padded: if no combination fits the band, no combo that day.
+ */
 class BundleBuilder
 {
-    private const ODDS_10_TARGET = 10.0;
+    public const BANKER_2 = ['min_legs' => 2, 'max_legs' => 5, 'low' => 2.00, 'high' => 2.50, 'target' => 2.0];
 
-    private const ODDS_10_BAND_LOW = 8.0;
+    public const ODDS_10 = ['min_legs' => 3, 'max_legs' => 12, 'low' => 10.0, 'high' => 15.0, 'target' => 10.0];
 
-    private const ODDS_10_BAND_HIGH = 13.0;
-
-    private const ODDS_10_MIN_LEGS = 3;
-
-    private const ODDS_10_MAX_LEGS = 6;
-
-    private const ODDS_10_POOL_CAP = 12; // bounds the combination search
+    private const LOG_STEP = 0.005;   // log-odds resolution of the search (about 0.5% in odds)
 
     public function rebuild(): void
     {
         // The visitor's calendar day (Lagos), not the server's UTC day.
         $today = Carbon::today(Prediction::displayTimezone());
 
-        $this->buildBanker2($today);
-        $this->buildOdds10($today);
+        $this->buildCombo(AccumulatorBundle::TYPE_BANKER_2, self::BANKER_2, $today);
+        $this->buildCombo(AccumulatorBundle::TYPE_ODDS_10, self::ODDS_10, $today);
         $this->buildWeekendPicks($today);
+        $this->gradePending();
     }
 
-    /**
-     * Scoped to $day's calendar day (not a rolling N-hour window) — Banker 2
-     * and the 10-Odds Combo are a daily product: rebuilt fresh each day from
-     * that day's own fixtures, never bleeding into tomorrow's slate the way
-     * a rolling 48h window would at, say, 11pm. Weekend Picks is the one
-     * deliberate exception that spans two calendar days (Sat+Sun) — see
-     * buildWeekendPicks, which doesn't call this.
-     */
-    private function nearTermPool(Carbon $day): Collection
+    /** Today's open, priced confident picks; the best market per fixture. */
+    private function pool(Carbon $day): Collection
     {
         return Prediction::query()
             ->open()
             ->where('verdict', 'confident_pick')
             ->whereNotNull('odds')
+            ->where('odds', '>', 1)
             ->whereNotNull('kickoff')
-            ->where('kickoff', '>=', now())
+            ->where('kickoff', '>', now())
             ->where('kickoff', '<=', $day->copy()->endOfDay()->utc())
             ->get()
-            // One leg per fixture — an accumulator leaning on two markets
-            // from the same match isn't two independent reads, it's one
-            // match's outcome counted twice.
-            ->unique(fn (Prediction $p) => $p->home.'|'.$p->away)
-            ->values();
-    }
-
-    private function buildBanker2(Carbon $today): void
-    {
-        $picks = $this->nearTermPool($today)
-            ->sortByDesc(fn (Prediction $p) => [$p->predicted_probability, $p->skill])
-            ->values();
-
-        $this->replaceBundle(AccumulatorBundle::TYPE_BANKER_2, $today, $picks->count() >= 2
-            ? $picks->take(2)
-            : null);
-    }
-
-    private function buildOdds10(Carbon $today): void
-    {
-        $pool = $this->nearTermPool($today)
+            // One leg per fixture: two markets from one match aren't two
+            // independent reads. Keep that fixture's most likely market.
             ->sortByDesc('predicted_probability')
-            ->take(self::ODDS_10_POOL_CAP)
+            ->unique(fn (Prediction $p) => $p->home . '|' . $p->away)
             ->values();
-
-        $best = $this->bestOdds10Combo($pool);
-
-        $this->replaceBundle(AccumulatorBundle::TYPE_ODDS_10, $today, $best);
     }
 
-    /**
-     * Searches combination sizes 3..6, smallest first, and within a size
-     * keeps whichever combo lands closest to the 10.0 target. Smallest-first
-     * means a clean 3-leg combo at 9.8 wins over a messier 6-leg combo at
-     * 10.1 — fewer legs is a real tie-break, not just a search shortcut,
-     * since every extra leg is another independent way for the accumulator
-     * to fail.
-     */
-    private function bestOdds10Combo(Collection $pool): ?Collection
+    private function buildCombo(string $type, array $rule, Carbon $day): void
     {
-        for ($size = self::ODDS_10_MIN_LEGS; $size <= min(self::ODDS_10_MAX_LEGS, $pool->count()); $size++) {
-            $best = null;
-            $bestDistance = null;
+        $existing = AccumulatorBundle::with('legs')->where('type', $type)->whereDate('date', $day->toDateString())->first();
 
-            foreach ($this->combinations($pool->all(), $size) as $combo) {
-                $combinedOdds = array_product(array_map(fn (Prediction $p) => $p->odds, $combo));
-
-                if ($combinedOdds < self::ODDS_10_BAND_LOW || $combinedOdds > self::ODDS_10_BAND_HIGH) {
-                    continue;
-                }
-
-                $distance = abs($combinedOdds - self::ODDS_10_TARGET);
-
-                if ($best === null || $distance < $bestDistance) {
-                    $best = $combo;
-                    $bestDistance = $distance;
-                }
+        // Frozen once a leg has kicked off: the published slip never changes.
+        if ($existing && ($existing->locked_at || $existing->legs->contains(fn ($p) => $p->kickoff && $p->kickoff->lte(now())))) {
+            if (! $existing->locked_at) {
+                $existing->update(['locked_at' => now()]);
             }
-
-            if ($best !== null) {
-                return collect($best);
-            }
-        }
-
-        return null;
-    }
-
-    /** @return iterable<array<Prediction>> */
-    private function combinations(array $items, int $size): iterable
-    {
-        $n = count($items);
-        if ($size > $n) {
             return;
         }
 
-        $indices = range(0, $size - 1);
+        $legs = $this->bestCombo($this->pool($day), $rule);
+        $this->replaceBundle($type, $day, $legs);
+    }
 
-        while (true) {
-            yield array_map(fn ($i) => $items[$i], $indices);
+    /**
+     * Highest joint probability among combinations whose combined odds fall in
+     * [low, high] with min..max legs. 0/1 knapsack over discretised log-odds:
+     * state (legs, log-odds bucket) keeps the best sum of log-probabilities.
+     * Candidates are then re-checked with exact odds; ties go to the combo
+     * closer to the target odds, then to fewer legs.
+     */
+    public function bestCombo(Collection $pool, array $rule): ?Collection
+    {
+        $items = $pool->values()->all();
+        if (count($items) < $rule['min_legs']) {
+            return null;
+        }
+        $maxB = (int) ceil(log($rule['high']) / self::LOG_STEP);
 
-            $i = $size - 1;
-            while ($i >= 0 && $indices[$i] === $i + $n - $size) {
-                $i--;
-            }
-            if ($i < 0) {
-                return;
-            }
-            $indices[$i]++;
-            for ($j = $i + 1; $j < $size; $j++) {
-                $indices[$j] = $indices[$j - 1] + 1;
+        $dp = array_fill(0, $rule['max_legs'] + 1, []);
+        $dp[0][0] = [0.0, []];
+        foreach ($items as $i => $p) {
+            $w = (int) round(log($p->odds) / self::LOG_STEP);
+            $lp = log(max(min((float) $p->predicted_probability, 0.999), 0.001));
+            for ($k = $rule['max_legs'] - 1; $k >= 0; $k--) {
+                foreach ($dp[$k] as $b => [$score, $idx]) {
+                    $nb = $b + $w;
+                    if ($nb > $maxB) {
+                        continue;
+                    }
+                    $ns = $score + $lp;
+                    if (! isset($dp[$k + 1][$nb]) || $ns > $dp[$k + 1][$nb][0]) {
+                        $dp[$k + 1][$nb] = [$ns, [...$idx, $i]];
+                    }
+                }
             }
         }
+
+        $best = null;
+        for ($k = $rule['min_legs']; $k <= $rule['max_legs']; $k++) {
+            foreach ($dp[$k] as [$score, $idx]) {
+                $odds = array_product(array_map(fn ($i) => $items[$i]->odds, $idx));
+                if ($odds < $rule['low'] || $odds > $rule['high']) {
+                    continue;
+                }
+                $cand = [$score, abs($odds - $rule['target']), $k, $idx];
+                if ($best === null
+                    || $cand[0] > $best[0] + 1e-9
+                    || (abs($cand[0] - $best[0]) <= 1e-9 && ($cand[1] < $best[1] || ($cand[1] == $best[1] && $cand[2] < $best[2])))) {
+                    $best = $cand;
+                }
+            }
+        }
+
+        return $best ? collect(array_map(fn ($i) => $items[$i], $best[3]))->sortBy('kickoff')->values() : null;
     }
 
     private function buildWeekendPicks(Carbon $today): void
     {
-        // Only a Fri/Sat/Sun product — publishing a stale "weekend picks"
-        // bundle on a Tuesday would be misleading, not just unhelpful. Not
-        // bothering to clean up a past weekend's row here: the public query
-        // only ever fetches today-or-future bundles (see
-        // AccumulatorBundle::scopeUpcoming), so a stale past row just never
-        // gets shown regardless of whether it's deleted.
+        // Only a Fri/Sat/Sun product. Past weekends' rows are never shown
+        // (AccumulatorBundle::scopeUpcoming), so they're left as they are.
         if (! $today->isFriday() && ! $today->isSaturday() && ! $today->isSunday()) {
             return;
         }
@@ -180,7 +158,7 @@ class BundleBuilder
             ->whereNotNull('kickoff')
             ->whereBetween('kickoff', [$saturday->copy()->startOfDay()->utc(), $sundayEnd->copy()->utc()])
             ->get()
-            ->unique(fn (Prediction $p) => $p->home.'|'.$p->away)
+            ->unique(fn (Prediction $p) => $p->home . '|' . $p->away)
             ->sortByDesc(fn (Prediction $p) => [$p->verdict === 'confident_pick' ? 1 : 0, $p->skill])
             ->take(5)
             ->values();
@@ -206,10 +184,39 @@ class BundleBuilder
             'type' => $type,
             'date' => $dateStr,
             'combined_odds' => $combinedOdds,
+            'status' => AccumulatorBundle::STATUS_PENDING,
         ]);
 
         foreach ($legs->values() as $position => $prediction) {
             $bundle->legs()->attach($prediction->id, ['position' => $position]);
         }
+    }
+
+    /**
+     * Lost as soon as any leg fails; won when every leg has landed. A leg
+     * settled without a grade (postponed/void) drops out, as at a bookmaker.
+     */
+    public function gradePending(): void
+    {
+        AccumulatorBundle::with('legs')
+            ->whereIn('type', [AccumulatorBundle::TYPE_BANKER_2, AccumulatorBundle::TYPE_ODDS_10])
+            ->where('status', AccumulatorBundle::STATUS_PENDING)
+            ->get()
+            ->each(function (AccumulatorBundle $b) {
+                $legs = $b->legs;
+                if ($legs->isEmpty()) {
+                    return;
+                }
+                $status = null;
+                if ($legs->contains(fn ($p) => $p->settled_at && $p->hit === false)) {
+                    $status = AccumulatorBundle::STATUS_LOST;
+                } elseif ($legs->every(fn ($p) => $p->settled_at !== null)) {
+                    $graded = $legs->filter(fn ($p) => $p->hit !== null);
+                    $status = $graded->isEmpty() ? AccumulatorBundle::STATUS_VOID : AccumulatorBundle::STATUS_WON;
+                }
+                if ($status) {
+                    $b->update(['status' => $status, 'settled_at' => now(), 'locked_at' => $b->locked_at ?? now()]);
+                }
+            });
     }
 }

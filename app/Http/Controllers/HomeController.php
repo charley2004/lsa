@@ -8,7 +8,8 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $track = Prediction::trackRecord();
+        // Headline record = the current model's published picks (config lsa.current_model).
+        $track = Prediction::trackRecord('current');
 
         // Leagues we actually have analysis for (not a hand-written list), so
         // the homepage can never advertise a competition the model doesn't cover.
@@ -61,10 +62,10 @@ class HomeController extends Controller
         ])->values();
 
         // Win/miss strip: last 12 settled picks, oldest-to-newest left-to-right.
-        $strip = Prediction::settled()->orderByDesc('kickoff')->limit(12)->get(['hit'])->reverse()->values();
+        $strip = Prediction::currentModel()->settled()->orderByDesc('kickoff')->limit(12)->get(['hit'])->reverse()->values();
 
         // Ledger: 3 most recent settled picks, newest first.
-        $ledger = Prediction::settled()->orderByDesc('kickoff')->limit(3)->get();
+        $ledger = Prediction::currentModel()->settled()->orderByDesc('kickoff')->limit(3)->get();
 
         return view('pages.home', compact('stats', 'leagues', 'previewPredictions', 'consoleData', 'consoleLabel', 'strip', 'ledger'));
     }

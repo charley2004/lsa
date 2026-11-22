@@ -8,6 +8,7 @@
     $hits         = (int) ($track['hits'] ?? 0);
     $misses       = max($settledCount - $hits, 0);
     $rate         = $settledCount ? (int) round(($track['hit_rate'] ?? 0) * 100) : 0;
+    $cm           = config('lsa.current_model');
 @endphp
 
 @section('content')
@@ -19,9 +20,9 @@
             <div class="page-head__inner">
                 <p class="kicker" data-hero style="--d:0ms">Performance tracking</p>
                 <h1 class="page-head__title" data-split>The results ledger</h1>
-                <p class="page-head__lede" data-hero style="--d:350ms">Every match we analyse, and how it actually ended — the reads that held up and the ones that didn't.</p>
+                <p class="page-head__lede" data-hero style="--d:350ms">Every pick our current model publishes, and how it actually ended — the ones that held up and the ones that didn't.</p>
                 <div class="page-head__meta" data-hero style="--d:480ms">
-                    <span><i class="dot-live" aria-hidden="true"></i><b>{{ $settledCount }}</b> settled {{ \Illuminate\Support\Str::plural('match', $settledCount) }}</span>
+                    <span><i class="dot-live" aria-hidden="true"></i><b>{{ $settledCount }}</b> settled {{ \Illuminate\Support\Str::plural('pick', $settledCount) }} since {{ $cm['since'] }}</span>
                     <span>Nothing removed, nothing edited after kickoff</span>
                 </div>
             </div>
@@ -35,7 +36,8 @@
             <div class="record__copy" data-reveal>
                 <p class="kicker kicker--light">Our commitment</p>
                 <h2 class="h2">Honest reporting, including the misses.</h2>
-                <p class="lede">This page compares actual outcomes with the factors highlighted in our analysis. It is a review of our reads — not a record of predictions or guarantees.</p>
+                <p class="lede">This record covers our current model, live since {{ $cm['since'] }}: it picks the most likely outcome only where the bookmaker's price isn't a bad deal. Every pick it publishes is graded here, hits and misses alike. Earlier picks from our previous model are archived further down.</p>
+                <p class="lede" style="margin-top:12px;font-size:.95rem;opacity:.8">{{ $cm['retest_line'] }}</p>
                 <ul class="checks">
                     <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><strong style="color:#fff;font-weight:500">Aligned</strong> — the key factors we identified were reflected in the result</span></li>
                     <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg><span><strong style="color:#fff;font-weight:500">Unexpected</strong> — the outcome differed significantly from the analysed patterns</span></li>
@@ -43,12 +45,12 @@
             </div>
 
             <div class="panel" data-reveal style="--i:1">
-                <div class="panel__head"><span>Analysis performance</span><span class="num">All time</span></div>
+                <div class="panel__head"><span>Current model</span><span class="num">Since {{ $cm['since'] }}</span></div>
 
                 @if ($settledCount === 0)
                     <div class="empty" style="background:transparent;border-color:var(--dark-line);margin-top:20px">
-                        <h3 style="color:#fff">No settled results yet</h3>
-                        <p style="color:var(--dark-muted)">Results appear here once analysed matches have finished.</p>
+                        <h3 style="color:#fff">First picks settling now</h3>
+                        <p style="color:var(--dark-muted)">The current model went live on {{ $cm['since'] }}. @if ($openCurrent > 0){{ $openCurrent }} {{ $openCurrent === 1 ? 'pick is' : 'picks are' }} waiting for full time; @endif results appear here as each match finishes.</p>
                     </div>
                 @else
                     <div class="panel__main">
@@ -105,7 +107,7 @@
                 <div><dt>Return on stakes</dt><dd class="num">{{ $signed($perf['roi']) }}</dd></div>
                 <div><dt>Units (1 per read)</dt><dd class="num">{{ $perf['n_priced'] ? ($perf['units'] > 0 ? '+' : '') . number_format($perf['units'], 2) : '—' }}</dd></div>
             </dl>
-            <p class="read__odds-note" style="margin-top:16px">Return covers reads with a real bookmaker price at the time of publishing ({{ $perf['n_priced'] }} of {{ $perf['n'] }}). Corners, cards and Asian handicap reads have no price on the books we read, so they count towards the hit rate but not the return. Past results don't predict future ones. 18+.</p>
+            <p class="read__odds-note" style="margin-top:16px">Return covers reads with a real bookmaker price at the time of publishing ({{ $perf['n_priced'] }} of {{ $perf['n'] }}). Every current-model pick is published with a real bookmaker price, so this normally covers all of them. Past results don't predict future ones. 18+.</p>
 
             @if ($perf['markets']->isNotEmpty())
             <h3 style="margin-top:48px;font-size:1.25rem;font-weight:600;letter-spacing:-0.02em">By market</h3>
@@ -147,49 +149,6 @@
             </div>
             <p class="read__odds-note" style="margin-top:8px">For a well-calibrated model, "Actually landed" tracks "Average stated". Where it lands lower, our probabilities were too confident for that band.</p>
             @endif
-        </div>
-    </section>
-    @endif
-
-    <!-- Current model re-test (config/lsa.php model_retest): hindsight, labelled as such -->
-    @php $rt = config('lsa.model_retest'); $sgn = fn ($v) => ($v > 0 ? '+' : '') . number_format($v, 1) . '%'; @endphp
-    @if ($rt)
-    <section class="section" id="model-retest" data-track-section="model-retest">
-        <div class="container">
-            <header class="section-head" data-reveal>
-                <p class="kicker">Model update &middot; {{ $rt['date'] }}</p>
-                <h2 class="h2">Our current model, re-tested on these matches.</h2>
-                <p class="lede">On {{ $rt['date'] }} we switched to a new model. It still picks the most likely outcome, but only where the bookmaker's price isn't a bad deal. We re-ran it on {{ $rt['matches'] }} matches from this ledger using only information available before each kickoff. This is a re-test in hindsight, not picks we published at the time: the published record above is unchanged.</p>
-            </header>
-
-            <dl class="facts" data-reveal style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));row-gap:20px">
-                <div><dt>Matches re-tested</dt><dd class="num">{{ $rt['matches'] }}</dd></div>
-                <div><dt>Picks made</dt><dd class="num">{{ $rt['picks'] }}</dd></div>
-                <div><dt>Won</dt><dd class="num">{{ number_format($rt['won_pct'], 1) }}%</dd></div>
-                <div><dt>Lost</dt><dd class="num">{{ number_format($rt['lost_pct'], 1) }}%</dd></div>
-                <div><dt>Return at the odds</dt><dd class="num">{{ $sgn($rt['return_pct']) }}</dd></div>
-                <div><dt>Previous model, same ledger</dt><dd class="num">{{ number_format($rt['old_won_pct'], 1) }}% won &middot; {{ $sgn($rt['old_return_pct']) }}</dd></div>
-            </dl>
-
-            <div class="rtable-wrap" style="margin-top:32px">
-                <table class="rtable">
-                    <thead><tr><th scope="col">Tier</th><th scope="col">Picks (re-test)</th><th scope="col">Won (re-test)</th><th scope="col">Return (re-test)</th><th scope="col">Won, 2020&ndash;now backtest</th><th scope="col">Return, 2020&ndash;now backtest</th></tr></thead>
-                    <tbody>
-                        @foreach ($rt['tiers'] as $i => $t)
-                            @php $bt = $rt['backtest'][$i] ?? null; @endphp
-                            <tr>
-                                <td class="c-factor" data-label="Tier">{{ $t['name'] }}</td>
-                                <td class="num" data-label="Picks">{{ $t['picks'] }}</td>
-                                <td class="num" data-label="Won">{{ number_format($t['won_pct'], 1) }}%</td>
-                                <td class="num" data-label="Return">{{ $sgn($t['return_pct']) }}</td>
-                                <td class="num" data-label="Won (backtest)">{{ $bt ? number_format($bt['won_pct'], 1) . '%' : '—' }}</td>
-                                <td class="num" data-label="Return (backtest)">{{ $bt ? $sgn($bt['return_pct']) : '—' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <p class="read__odds-note" style="margin-top:12px">Returns use flat one-unit stakes at Bet365 pre-match odds. They are negative: these picks win often, but at short odds, so a high hit rate still doesn't beat the bookmaker's margin. From {{ $rt['date'] }} every pick goes into the live ledger above, so you can check the new model's real record as it builds. Past results don't predict future ones. 18+.</p>
         </div>
     </section>
     @endif
@@ -237,13 +196,55 @@
                                 <td class="c-outcome" data-label="Outcome"><span class="outcome {{ $oc }}">{{ $p->outcomeLabel() }}</span></td>
                             </tr>
                         @empty
-                            <tr><td class="c-empty" colspan="5">No settled results yet.</td></tr>
+                            <tr><td class="c-empty" colspan="5">No settled picks from the current model yet — the first ones finish this week.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
     </section>
+
+    <!-- Previous model: archived record, unchanged -->
+    @if (($prevTrack['n_settled'] ?? 0) > 0)
+    @php
+        $pRate = (int) round(($prevTrack['hit_rate'] ?? 0) * 100);
+        $pRoi = $prevPerf['roi'];
+    @endphp
+    <section class="section" id="previous-model" data-track-section="previous-model">
+        <div class="container" data-reveal>
+            <details class="archive">
+                <summary class="h3" style="cursor:pointer;font-size:1.15rem;font-weight:600;letter-spacing:-0.02em">Previous model (before {{ $cm['since'] }}) &mdash; archived record</summary>
+                <p class="lede" style="margin-top:12px">Picks from the model we used before {{ $cm['since'] }}. Kept here unchanged, so nothing is hidden.</p>
+                <dl class="facts" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));row-gap:20px;margin-top:16px">
+                    <div><dt>Settled picks</dt><dd class="num">{{ $prevTrack['n_settled'] }}</dd></div>
+                    <div><dt>Won</dt><dd class="num">{{ $pRate }}%</dd></div>
+                    <div><dt>Lost</dt><dd class="num">{{ 100 - $pRate }}%</dd></div>
+                    <div><dt>Return (priced picks)</dt><dd class="num">{{ $pRoi === null ? '—' : ($pRoi > 0 ? '+' : '') . number_format($pRoi * 100, 1) . '%' }}</dd></div>
+                </dl>
+                @if ($prevSettled->isNotEmpty())
+                <div class="rtable-wrap" style="margin-top:24px">
+                    <table class="rtable">
+                        <thead><tr><th scope="col">Date</th><th scope="col">Match</th><th scope="col">Pick</th><th scope="col">Result</th><th scope="col">Outcome</th></tr></thead>
+                        <tbody>
+                            @foreach ($prevSettled as $p)
+                                @php $oc = $p->outcomeClass(); @endphp
+                                <tr class="is-{{ $oc }}">
+                                    <td class="c-date" data-label="Date">{{ $p->localKickoff()?->format('j M') ?? '—' }}</td>
+                                    <td class="c-match" data-label="Match">@if ($p->slug)<a class="c-match__link" href="{{ $p->fixtureUrl() }}">{{ $p->home }}<span class="vs-sm">vs</span>{{ $p->away }}</a>@else{{ $p->home }}<span class="vs-sm">vs</span>{{ $p->away }}@endif</td>
+                                    <td class="c-factor" data-label="Pick">{{ $p->market }}@if ($p->odds)<span class="c-factor__odds"> @ {{ number_format($p->odds, 2) }}</span>@endif</td>
+                                    <td class="c-score" data-label="Result"><span class="score">{{ $p->home_goals }}–{{ $p->away_goals }}</span></td>
+                                    <td class="c-outcome" data-label="Outcome"><span class="outcome {{ $oc }}">{{ $p->outcomeLabel() }}</span></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <p class="read__odds-note" style="margin-top:8px">Most recent {{ $prevSettled->count() }} of {{ $prevTrack['n_settled'] }} settled picks.</p>
+                @endif
+            </details>
+        </div>
+    </section>
+    @endif
 
     <!-- What we learn -->
     <section class="section section--soft">

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Football Analysis Today: Match Previews & Stats | LSA')
-@section('description', "Today's football match analysis: model-projected xG, last-5 form, head-to-head records and calibrated probabilities for every fixture — with every result published.")
+@section('description', "Today's football match analysis: model-projected xG, last-5 form, head-to-head records and model probabilities checked against the bookmaker's price — with every result published.")
 
 @php
     // Crest helpers: initials + a stable colour per team name (no club logos needed)
@@ -56,7 +56,7 @@
                     '@id' => route('analysis') . '#webpage',
                     'url' => route('analysis'),
                     'name' => 'Football Analysis Today: Match Previews & Stats',
-                    'description' => "Today's football match analysis: model-projected xG, last-5 form, head-to-head records and calibrated probabilities for every fixture.",
+                    'description' => "Today's football match analysis: model-projected xG, last-5 form, head-to-head records and model probabilities checked against the bookmaker's price.",
                     'isPartOf' => ['@id' => url('/') . '#website'],
                     'inLanguage' => 'en',
                     'dateModified' => $lastUpdated ? \Illuminate\Support\Carbon::parse($lastUpdated)->toAtomString() : null,
@@ -99,7 +99,7 @@
                 {{-- No data-split/data-hero on the H1 and lede on purpose: those hide the
                      text until lsa.js runs, which delays Largest Contentful Paint. --}}
                 <h1 class="page-head__title">Football Analysis Today</h1>
-                <p class="page-head__lede">Today's football match previews, built from data: model-projected goals (xG), last-five form, head-to-head records and a calibrated probability for every fixture we analyse — with every outcome later published on the results ledger.</p>
+                <p class="page-head__lede">Today's football match previews, built from data: model-projected goals (xG), last-five form, head-to-head records and a model probability checked against the bookmaker's price for every pick we publish — with every outcome later published on the results ledger.</p>
                 <div class="page-head__meta" data-hero style="--d:480ms">
                     <span><i class="dot-live" aria-hidden="true"></i><b>{{ $predictions->count() }}</b> {{ \Illuminate\Support\Str::plural('fixture', $predictions->count()) }} analysed</span>
                     @if ($lastUpdated)
@@ -217,12 +217,14 @@
                                         <aside class="read">
                                             <p class="acard__label">Model read</p>
                                             <p class="read__market">{{ $p->market }}</p>
-                                            <div class="read__prob"><b>{{ number_format($prob, 1) }}%</b><span>calibrated probability</span></div>
+                                            <div class="read__prob"><b>{{ number_format($prob, 1) }}%</b><span>model probability</span></div>
                                             <div class="meter" aria-hidden="true"><i style="width:{{ min($prob, 100) }}%"></i></div>
 
                                             <dl class="read__facts">
                                                 <div><dt>Verdict</dt><dd><span class="verdict {{ $p->verdictClass() }}">{{ $p->verdictLabel() }}</span></dd></div>
-                                                <div><dt>Market skill</dt><dd class="num">{{ number_format($p->skill ?? 0, 4) }}</dd></div>
+                                                @if ($p->prob_market !== null)
+                                                    <div><dt>Bookmaker's fair chance</dt><dd class="num">{{ number_format($p->prob_market * 100, 1) }}%</dd></div>
+                                                @endif
                                                 @if ($p->odds !== null)
                                                     <div><dt>Odds</dt><dd class="num">{{ number_format($p->odds, 2) }}</dd></div>
                                                 @endif
@@ -252,7 +254,7 @@
             @endif
 
             @if ($predictions->isNotEmpty())
-                <p class="read__odds-note" id="odds-note" style="margin-top:32px">About odds: we show real bookmaker prices for 1X2, Double Chance, BTTS and Over/Under goal lines where one exists. Corners, cards and Asian handicap reads aren't priced on the books we read, so they show no odds rather than an estimate.</p>
+                <p class="read__odds-note" id="odds-note" style="margin-top:32px">About odds: every current-model pick comes with a real bookmaker price (match result, double chance or over/under 2.5 goals). The bookmaker's fair chance is their price with the margin taken out; we only publish a pick where our probability holds up against it.</p>
             @endif
 
             <!-- Disclaimer -->
@@ -275,11 +277,11 @@
             </div>
             <div class="prose">
                 <h3>Projected goals (xG)</h3>
-                <p>Each fixture gets a projected-goals figure for both sides from models trained on many seasons of historical results across more than 20 leagues. It shows which side is more likely to create the better chances — not a promised scoreline.</p>
+                <p>Each fixture gets a projected-goals figure for both sides from models trained on 25+ seasons of historical results across {{ config('lsa.current_model.leagues') }} leagues. It shows which side is more likely to create the better chances — not a promised scoreline.</p>
                 <h3>Recent form and head-to-head</h3>
                 <p>Last-five form shows how each team is actually playing right now. Where two sides show a consistent pattern across past meetings we note it, and say so plainly when the sample is small.</p>
-                <h3>Calibrated probability</h3>
-                <p>The headline number on each card is a probability checked against how often similar reads came true in the past. Only fixtures where the model has a clear read appear on this page.</p>
+                <h3>Model probability and the price check</h3>
+                <p>The headline number on each card is our probability for the pick. It starts from the bookmaker's own odds, with their margin removed, and our model only moves it as far as it has earned on past seasons. A pick is published only where a real bookmaker price isn't a bad deal against that probability: Confident picks need about a 75% chance, Lean picks about 72%. Matches where nothing clears the bar don't appear on this page.</p>
                 <h3>Every result published</h3>
                 <p>After full time, every fixture is graded and added to the <a href="{{ route('results') }}">results ledger</a> — the misses as well as the hits. Each fixture keeps its own analysis page, so you can always check what we said before kickoff. See also <a href="{{ route('combos') }}">today's combos</a> and <a href="{{ route('about') }}">our approach</a>.</p>
             </div>

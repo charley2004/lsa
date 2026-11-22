@@ -64,9 +64,27 @@ class PagesTest extends TestCase
         $response = $this->get(route('results'));
 
         $response->assertOk();
-        $response->assertSee('re-tested on these matches', false);
-        $response->assertSee('not picks we published at the time', false);
-        $response->assertSee('75.5%', false);
+        $response->assertSee('a re-test in hindsight, not picks we published', false);
+        $response->assertDontSee('173', false);
+    }
+
+    public function test_results_headline_is_current_model_and_previous_is_archived(): void
+    {
+        $base = ['market' => 'Home win', 'predicted_probability' => 0.75, 'odds' => 1.3, 'verdict' => 'confident_pick',
+                 'settled_at' => now(), 'home_goals' => 2, 'away_goals' => 0, 'logged_at' => now()->subDays(10)];
+        \App\Models\Prediction::create($base + ['home' => 'NewA', 'away' => 'NewB', 'kickoff' => now()->subDay(),
+            'hit' => true, 'model_version' => 'v2-20261121-abc']);
+        \App\Models\Prediction::create($base + ['home' => 'OldA', 'away' => 'OldB', 'kickoff' => now()->subDays(9),
+            'hit' => false]);
+
+        $this->assertSame(1, \App\Models\Prediction::trackRecord('current')['n_settled']);
+        $this->assertSame(1, \App\Models\Prediction::trackRecord('previous')['n_settled']);
+
+        $html = $this->get(route('results'))->assertOk()->getContent();
+        $archive = strpos($html, 'id="previous-model"');
+        $this->assertNotFalse($archive, 'previous model archive missing');
+        $this->assertLessThan($archive, strpos($html, 'NewA'), 'current pick must be in the headline ledger');
+        $this->assertGreaterThan($archive, strpos($html, 'OldA'), 'previous pick must be in the archive');
     }
 
     public function test_results_page_shows_real_track_record(): void

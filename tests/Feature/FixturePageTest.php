@@ -173,10 +173,11 @@ class FixturePageTest extends TestCase
                 'home' => "Home{$i}", 'away' => "Away{$i}", 'market' => 'Home win', 'odds' => $odds,
                 'predicted_probability' => 0.72, 'kickoff' => Carbon::parse('2020-11-21 15:00:00'),
                 'settled_at' => now(), 'home_goals' => 1, 'away_goals' => 0, 'hit' => $hit,
+                'model_version' => 'v2-test',
             ]);
         }
 
-        $perf = Prediction::performance();
+        $perf = Prediction::performance('current');
         $this->assertSame(4, $perf['n_priced']);
         $this->assertEqualsWithDelta(-1.0, $perf['units'], 1e-9);
         $this->assertEqualsWithDelta(-0.25, $perf['roi'], 1e-9);

@@ -44,8 +44,12 @@
 
             <dl class="tiles" data-reveal style="--i:1">
                 <div class="tile"><dt>Matches analysed</dt><dd data-count="{{ (int) $stats['matches_analyzed'] }}">{{ $stats['matches_analyzed'] }}</dd></div>
-                <div class="tile"><dt>Leagues covered</dt><dd><span data-count="15">15</span>+</dd></div>
-                <div class="tile"><dt>Alignment rate</dt><dd><span data-count="{{ $stats['hit_rate'] }}">{{ $stats['hit_rate'] }}</span>%</dd></div>
+                <div class="tile"><dt>Leagues covered</dt><dd><span data-count="{{ config('lsa.current_model.leagues') }}">{{ config('lsa.current_model.leagues') }}</span></dd></div>
+                @if ($stats['hit_rate'] !== null)
+                <div class="tile"><dt>Won, current model</dt><dd><span data-count="{{ $stats['hit_rate'] }}">{{ $stats['hit_rate'] }}</span>%</dd></div>
+                @else
+                <div class="tile"><dt>Current model</dt><dd>Live {{ config('lsa.current_model.since') }}</dd></div>
+                @endif
                 <div class="tile"><dt>Analysis updates</dt><dd>Daily</dd></div>
             </dl>
         </div>
@@ -63,10 +67,10 @@
             <div class="steps steps--3" data-stagger>
                 @foreach ([
                     ['Form analysis', 'Last-five results for both teams, so you can see how each side is actually playing right now.', '<path pathLength="1" d="M3 12h4l3-8 4 16 3-8h4"/>'],
-                    ['Projected goals (xG)', 'Models trained on many seasons of results across 20+ leagues estimate expected goals for both sides.', '<path pathLength="1" d="M3 3v18h18"/><path pathLength="1" d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/>'],
+                    ['Projected goals (xG)', 'Models trained on 25+ seasons of results across ' . config('lsa.current_model.leagues') . ' leagues estimate expected goals for both sides.', '<path pathLength="1" d="M3 3v18h18"/><path pathLength="1" d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/>'],
                     ['Head-to-head history', 'Where previous meetings show a consistent pattern we flag it, and say so plainly when the sample is small.', '<path pathLength="1" d="M4 8h14l-4-4M20 16H6l4 4"/>'],
-                    ['Calibrated probability', 'Each read carries a probability checked against how often similar reads actually came true.', '<path pathLength="1" d="M8 3h8l4 4v14H4V3h4"/><path pathLength="1" d="M8 12h8M8 16h5"/>'],
-                    ['Market selection', 'The model scans goals, result, double-chance, BTTS, corners and cards markets, and publishes only clear reads.', '<circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M12 3v18M3 12h4M17 12h4"/>'],
+                    ['Market and model together', 'The bookmaker\'s own odds are the starting point; our model only moves the probability as far as it has earned on past seasons.', '<path pathLength="1" d="M8 3h8l4 4v14H4V3h4"/><path pathLength="1" d="M8 12h8M8 16h5"/>'],
+                    ['Price check', 'We pick the likely outcome in match result, double chance or over/under 2.5 goals, and publish it only where a real bookmaker price isn\'t a bad deal. Confident picks need about a 75% chance, Lean picks about 72%.', '<circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M12 3v18M3 12h4M17 12h4"/>'],
                     ['Graded in public', 'Every read is graded after full time and stays on the results ledger — hits and misses alike.', '<circle pathLength="1" cx="12" cy="12" r="3"/><path pathLength="1" d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/>'],
                 ] as $i => [$title, $desc, $icon])
                     <article class="step" data-spot>

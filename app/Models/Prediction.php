@@ -15,7 +15,7 @@ class Prediction extends Model
         'verdict', 'conviction', 'skill', 'source',
         'settled_at', 'home_goals', 'away_goals',
         'home_corners', 'away_corners', 'home_cards', 'away_cards', 'hit',
-        'league', 'xg_home', 'xg_away', 'home_form', 'away_form', 'h2h_note', 'preview',
+        'league', 'xg_home', 'xg_away', 'home_form', 'away_form', 'h2h_note', 'preview', 'model_version', 'prob_market',
     ];
 
     protected $casts = [
@@ -23,6 +23,7 @@ class Prediction extends Model
         'kickoff' => 'datetime',
         'settled_at' => 'datetime',
         'predicted_probability' => 'float',
+        'prob_market' => 'float',
         'odds' => 'float',
         'conviction' => 'float',
         'skill' => 'float',
@@ -124,6 +125,36 @@ class Prediction extends Model
     public function scopeSettled(Builder $query): Builder
     {
         return $query->whereNotNull('settled_at')->whereNotNull('hit');
+    }
+
+    /**
+     * The current model's picks (algorithm engine v2, live from
+     * config('lsa.current_model.since')) vs the previous model's (model_version
+     * NULL). /results headlines the current model and archives the previous one.
+     */
+    public function scopeCurrentModel(Builder $query): Builder
+    {
+        return $query->where('model_version', 'like', config('lsa.current_model.version_prefix', 'v2') . '%');
+    }
+
+    public function scopePreviousModel(Builder $query): Builder
+    {
+        return $query->whereNull('model_version');
+    }
+
+    /** 'current' | 'previous' | null (everything) */
+    public static function forModel(?string $model): Builder
+    {
+        return match ($model) {
+            'current' => static::query()->currentModel(),
+            'previous' => static::query()->previousModel(),
+            default => static::query(),
+        };
+    }
+
+    public function isCurrentModel(): bool
+    {
+        return str_starts_with((string) $this->model_version, config('lsa.current_model.version_prefix', 'v2'));
     }
 
     public function scopeUpcoming(Builder $query): Builder
@@ -259,9 +290,9 @@ class Prediction extends Model
      * per-market split, and calibration (did reads we called "70%" land
      * about 70% of the time?). Nothing is filtered or cherry-picked.
      */
-    public static function performance(): array
+    public static function performance(?string $model = null): array
     {
-        $settled = static::settled()->whereNotNull('hit')
+        $settled = static::forModel($model)->settled()->whereNotNull('hit')
             ->get(['market', 'predicted_probability', 'odds', 'hit']);
 
         $priced = $settled->filter(fn ($p) => $p->odds !== null && $p->odds > 1);
@@ -315,9 +346,9 @@ class Prediction extends Model
     /**
      * The real, live track record — mirrors agent/ledger.py's track_record().
      */
-    public static function trackRecord(): array
+    public static function trackRecord(?string $model = null): array
     {
-        $settled = static::settled()->get(['predicted_probability', 'hit']);
+        $settled = static::forModel($model)->settled()->get(['predicted_probability', 'hit']);
 
         if ($settled->isEmpty()) {
             return ['n_settled' => 0];

@@ -225,7 +225,7 @@
                         @php $prob = round(($p->predicted_probability ?? 0) * 100, 1); @endphp
                         <div class="read">
                             <h3 class="read__market">{{ $p->market }}</h3>
-                            <div class="read__prob"><b>{{ number_format($prob, 1) }}%</b><span>calibrated probability</span></div>
+                            <div class="read__prob"><b>{{ number_format($prob, 1) }}%</b><span>model probability</span></div>
                             <div class="meter" aria-hidden="true"><i style="width:{{ min($prob, 100) }}%"></i></div>
                             <dl class="read__facts">
                                 <div><dt>Verdict</dt><dd><span class="verdict {{ $p->verdictClass() }}">{{ $p->verdictLabel() }}</span></dd></div>

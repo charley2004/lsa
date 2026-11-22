@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'LSA: Data-Driven Football Analysis & Match Previews')
-@section('description', 'Data-driven football match analysis: projected goals (xG), recent form, head-to-head and calibrated probabilities — with every result published, hits and misses alike.')
+@section('description', 'Data-driven football match analysis: projected goals (xG), recent form, head-to-head and model probabilities checked against the bookmaker&#039;s price — with every result published, hits and misses alike.')
 
 @section('content')
 
@@ -50,7 +50,11 @@
       <dl class="hero__proof" data-hero style="--d:680ms">
         <div><dt>Fixtures analysed</dt><dd class="num" data-count="{{ $stats['fixtures_analysed'] }}">{{ $stats['fixtures_analysed'] }}</dd></div>
         <div><dt>Competitions</dt><dd class="num" data-count="{{ $stats['competitions'] }}">{{ $stats['competitions'] }}</dd></div>
-        <div><dt>Aligned, all-time</dt><dd class="num"><span data-count="{{ $stats['hit_rate'] }}">{{ $stats['hit_rate'] }}</span>%</dd></div>
+        @if ($stats['n_settled'] > 0)
+        <div><dt>Won, current model</dt><dd class="num"><span data-count="{{ $stats['hit_rate'] }}">{{ $stats['hit_rate'] }}</span>%</dd></div>
+        @else
+        <div><dt>Current model</dt><dd class="num">Live {{ config('lsa.current_model.since') }}</dd></div>
+        @endif
       </dl>
     </div>
 
@@ -151,7 +155,7 @@
         <span class="step__num num">01</span>
         <span class="step__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="M3 3v18h18"/><path pathLength="1" d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/></svg></span>
         <h3>Projected goals (xG)</h3>
-        <p>Models trained on many seasons of results across 20+ leagues project expected goals for both sides.</p>
+        <p>Models trained on 25+ seasons of results across {{ config('lsa.current_model.leagues') }} leagues project expected goals for both sides.</p>
       </article>
       <article class="step" data-spot>
         <span class="step__num num">02</span>
@@ -168,8 +172,8 @@
       <article class="step" data-spot>
         <span class="step__num num">04</span>
         <span class="step__icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="M8 3h8l4 4v14H4V3h4"/><path pathLength="1" d="M8 12h8M8 16h5"/></svg></span>
-        <h3>Calibrated probability</h3>
-        <p>Every read carries a probability checked against how often similar reads came true. Only clear reads get published.</p>
+        <h3>Price check</h3>
+        <p>Every pick needs a real bookmaker price. We publish the likely outcome only where that price isn't a bad deal against the fair odds, as a Confident or Lean pick.</p>
       </article>
     </div>
   </div>
@@ -212,7 +216,7 @@
                 @if ($p->away_form)<span class="pills" data-pills="{{ implode('', $p->away_form) }}"></span>@endif
               </div>
             </div>
-            <p class="match__text">Top market from our calibrated scan: <strong>{{ $p->market }}</strong> at {{ number_format($p->predicted_probability * 100, 1) }}%.</p>
+            <p class="match__text">Our {{ strtolower($p->verdictLabel()) }}: <strong>{{ $p->market }}</strong> at {{ number_format($p->predicted_probability * 100, 1) }}%@if ($p->odds), odds {{ number_format($p->odds, 2) }}@endif.</p>
             <a class="match__link" href="{{ $p->fixtureUrl() ?? route('analysis') }}">Read analysis <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </article>
         @endforeach
@@ -240,8 +244,14 @@
     </div>
 
     <div class="panel" data-reveal style="--i:1">
-      <div class="panel__head"><span>Analysis performance</span><span class="num">All-time</span></div>
+      <div class="panel__head"><span>Current model</span><span class="num">Since {{ config('lsa.current_model.since') }}</span></div>
 
+      @if ($stats['n_settled'] === 0)
+      <div class="empty" style="background:transparent;border-color:var(--dark-line);margin-top:20px">
+        <h3 style="color:#fff">First picks settling now</h3>
+        <p style="color:var(--dark-muted)">Our current model went live on {{ config('lsa.current_model.since') }}. Its record builds here as each match finishes; the previous model's record is archived on the results page.</p>
+      </div>
+      @else
       <div class="panel__main">
         @php
           $aligned = $stats['hits'];
@@ -264,6 +274,7 @@
           <div class="tally tally--miss"><dt>Unexpected</dt><dd class="num" data-count="{{ $unexpected }}">{{ $unexpected }}</dd><span class="tally__bar"><i style="width:{{ $missPct }}%"></i></span></div>
         </dl>
       </div>
+      @endif
 
       @if ($strip->isNotEmpty())
         <div class="strip">

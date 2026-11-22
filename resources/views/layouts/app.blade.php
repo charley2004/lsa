@@ -6,7 +6,7 @@
         // Blade; decode once here so the {{ }} below escapes exactly once
         // (otherwise "Today's" / "&" render as visible &#039; / &amp; entities).
         $pageTitle = html_entity_decode(trim($__env->yieldContent('title', 'LSA — LEGIT SOURCE ANALYSIS')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $pageDescription = html_entity_decode(trim($__env->yieldContent('description', 'Data-driven football match analysis: projected goals (xG), recent form, head-to-head and calibrated probabilities — with every result published, hits and misses alike.')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $pageDescription = html_entity_decode(trim($__env->yieldContent('description', 'Data-driven football match analysis: projected goals (xG), recent form, head-to-head and model probabilities checked against the bookmaker&#039;s price — with every result published, hits and misses alike.')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $canonicalUrl = url()->current();
         $ogImageUrl = asset('images/og-default.png');
         $telegramUrl = config('lsa.telegram_url');

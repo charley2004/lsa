@@ -8,12 +8,12 @@ class StaticController extends Controller
 {
     public function about()
     {
-        $track = Prediction::trackRecord();
+        $track = Prediction::trackRecord('current');
         $totalLogged = Prediction::count();
 
         $stats = [
             'matches_analyzed' => $totalLogged > 0 ? $totalLogged : '500+',
-            'hit_rate' => $track['n_settled'] > 0 ? round($track['hit_rate'] * 100) : 0,
+            'hit_rate' => $track['n_settled'] > 0 ? round($track['hit_rate'] * 100) : null,
         ];
 
         return view('pages.about', compact('stats'));

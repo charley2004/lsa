@@ -14,7 +14,7 @@ class AccumulatorController extends Controller
         return view('pages.combos', [
             // today's slips first, then tomorrow's; 2 odds before 10 odds
             'slips' => $upcoming->whereIn('type', [AccumulatorBundle::TYPE_BANKER_2, AccumulatorBundle::TYPE_ODDS_10])
-                ->filter(fn ($b) => AccumulatorBundle::meetsRule($b->type, $b->combined_odds))
+                ->filter(fn ($b) => AccumulatorBundle::meetsRule($b->type, $b->combined_odds, $b->legs->count()))
                 ->sortBy(fn ($b) => [$b->date->toDateString(), $b->type === AccumulatorBundle::TYPE_BANKER_2 ? 0 : 1])
                 ->values(),
             'weekendPicks' => $upcoming->firstWhere('type', AccumulatorBundle::TYPE_WEEKEND_PICKS),

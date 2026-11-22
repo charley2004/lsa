@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  *
  * How a combo is chosen
  *   Each combo has an odds band and a leg range:
- *     Banker 2 Odds: combined odds 2.00-2.50, 2-5 legs (at least 2.00)
+ *     Banker 2 Odds: the day's 3 most likely picks (4 if three don't reach 2.00)
  *     10-Odds:       combined odds 10.00-15.00, 3-12 legs (at least 10.00)
  *   Among every combination of today's picks (one leg per fixture) whose odds
  *   land in the band, it picks the one with the HIGHEST chance of every leg
@@ -37,7 +37,9 @@ class BundleBuilder
         AccumulatorBundle::TYPE_ODDS_10 => self::ODDS_10,
     ];
 
-    public const BANKER_2 = ['min_legs' => 2, 'max_legs' => 5, 'low' => 2.00, 'high' => 2.50, 'target' => 2.0];
+    // Banker 2 Odds: the day's 3 most likely picks, plus the 4th if three
+    // don't reach 2.00 (see topPicks). low/high only sanity-check a slip.
+    public const BANKER_2 = ['min_legs' => 3, 'max_legs' => 4, 'low' => 1.30, 'high' => 4.00, 'target' => 2.0];
 
     public const ODDS_10 = ['min_legs' => 3, 'max_legs' => 12, 'low' => 10.0, 'high' => 15.0, 'target' => 10.0];
 
@@ -86,7 +88,7 @@ class BundleBuilder
         // A slip that doesn't meet its own rule (e.g. a 1.44 "2 odds" built by
         // the old top-two logic) is never frozen or graded: discard and rebuild
         // from the picks that haven't kicked off yet.
-        if ($existing && ! AccumulatorBundle::meetsRule($type, $existing->combined_odds)) {
+        if ($existing && ! AccumulatorBundle::meetsRule($type, $existing->combined_odds, $existing->legs->count())) {
             $existing->delete();
             $existing = null;
         }
@@ -99,8 +101,31 @@ class BundleBuilder
             return;
         }
 
-        $legs = $this->bestCombo($this->pool($day), $rule);
+        $legs = $type === AccumulatorBundle::TYPE_BANKER_2
+            ? $this->topPicks($this->pool($day), $rule)
+            : $this->bestCombo($this->pool($day), $rule);
         $this->replaceBundle($type, $day, $legs);
+    }
+
+    /**
+     * Banker 2 Odds: the 3 picks with the highest model probability (one per
+     * fixture). If those three combine to under 2.00 odds, the 4th most likely
+     * pick is added. The slip is published at its real combined odds; it is
+     * never padded with a weaker pick just to reach 2.00.
+     */
+    public function topPicks(Collection $pool, array $rule): ?Collection
+    {
+        $ranked = $pool->sortByDesc(fn (Prediction $p) => [(float) $p->predicted_probability, (float) $p->skill])->values();
+        if ($ranked->count() < $rule['min_legs']) {
+            return null;
+        }
+        $legs = $ranked->take($rule['min_legs']);
+        $odds = $legs->reduce(fn ($c, Prediction $p) => $c * $p->odds, 1.0);
+        if ($odds < $rule['target'] && $ranked->count() > $rule['min_legs']) {
+            $legs = $ranked->take($rule['max_legs']);
+        }
+
+        return $legs->sortBy('kickoff')->values();
     }
 
     /**
@@ -221,7 +246,7 @@ class BundleBuilder
             ->whereIn('type', [AccumulatorBundle::TYPE_BANKER_2, AccumulatorBundle::TYPE_ODDS_10])
             ->where('status', AccumulatorBundle::STATUS_PENDING)
             ->get()
-            ->filter(fn (AccumulatorBundle $b) => AccumulatorBundle::meetsRule($b->type, $b->combined_odds))
+            ->filter(fn (AccumulatorBundle $b) => AccumulatorBundle::meetsRule($b->type, $b->combined_odds, $b->legs->count()))
             ->each(function (AccumulatorBundle $b) {
                 $legs = $b->legs;
                 if ($legs->isEmpty()) {

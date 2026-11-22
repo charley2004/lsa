@@ -49,18 +49,25 @@ class AccumulatorBundle extends Model
         return $query->whereIn('status', [self::STATUS_WON, self::STATUS_LOST])
             ->where(fn (Builder $q) => $q
                 ->where(fn (Builder $b) => $b->where('type', self::TYPE_BANKER_2)
-                    ->where('combined_odds', '>=', \App\Services\BundleBuilder::BANKER_2['low'] - 0.005))
+                    ->has('legs', '>=', \App\Services\BundleBuilder::BANKER_2['min_legs'])
+                    ->has('legs', '<=', \App\Services\BundleBuilder::BANKER_2['max_legs']))
                 ->orWhere(fn (Builder $b) => $b->where('type', self::TYPE_ODDS_10)
                     ->where('combined_odds', '>=', \App\Services\BundleBuilder::ODDS_10['low'] - 0.005)))
             ->orderByDesc('date');
     }
 
     /** Does a slip of this type meet the current rule (at least 2.00 / 10.00 odds)? */
-    public static function meetsRule(string $type, ?float $odds): bool
+    public static function meetsRule(string $type, ?float $odds, ?int $legs = null): bool
     {
         $rule = \App\Services\BundleBuilder::RULES[$type] ?? null;
+        if ($rule === null) {
+            return true;
+        }
+        if ($legs !== null && ($legs < $rule['min_legs'] || $legs > $rule['max_legs'])) {
+            return false;
+        }
 
-        return $rule === null || ($odds !== null && $odds >= $rule['low'] - 0.005 && $odds <= $rule['high'] + 0.005);
+        return $odds !== null && $odds >= $rule['low'] - 0.005 && $odds <= $rule['high'] + 0.005;
     }
 
     public function label(): string
@@ -76,7 +83,7 @@ class AccumulatorBundle extends Model
     public function strapline(): string
     {
         return match ($this->type) {
-            self::TYPE_BANKER_2 => "Today's confident picks combined to at least 2.00 odds, choosing the combination most likely to land together.",
+            self::TYPE_BANKER_2 => "Today's 3 or 4 most likely picks by model probability, combined (usually about 2.00 odds).",
             self::TYPE_ODDS_10 => "Today's confident picks combined to at least 10.00 odds, choosing the combination most likely to land together.",
             self::TYPE_WEEKEND_PICKS => "The strongest individual reads across this weekend's fixtures.",
             default => '',

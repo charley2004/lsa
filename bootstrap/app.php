@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Runs before the session starts, so cached public pages skip the DB entirely.
+        $middleware->web(prepend: [
+            \App\Http\Middleware\CachePublicPage::class,
+        ]);
+
         $middleware->alias([
             'verify.sync-key' => \App\Http\Middleware\VerifySyncKey::class,
         ]);

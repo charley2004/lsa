@@ -104,6 +104,9 @@ class PredictionSyncController extends Controller
         // transaction's atomicity.
         app(BundleBuilder::class)->rebuild();
 
+        // New or settled fixtures must show up now, not after the page-cache TTL.
+        \App\Http\Middleware\CachePublicPage::flush();
+
         // Tell search engines about new/changed fixture pages straight away
         // (plus the hub pages that list them), instead of anyone requesting
         // indexing by hand. Never throws; production only.

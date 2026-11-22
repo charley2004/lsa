@@ -16,6 +16,11 @@ return [
     'display_timezone' => env('LSA_DISPLAY_TIMEZONE', 'Africa/Lagos'),
 
     'telegram_url' => env('LSA_TELEGRAM_URL', 'https://t.me/+8Khvrbv71dZkNTc0'),
+    // Full-page cache for public pages (App\Http\Middleware\CachePublicPage).
+    // Uses the file store so a cache hit never touches the database.
+    'page_cache' => env('LSA_PAGE_CACHE', true),
+    'page_cache_store' => env('LSA_PAGE_CACHE_STORE', 'file'),
+
     // IndexNow: notifies Bing/DuckDuckGo/Yandex of new or changed fixture pages
     // on every sync (App\Services\IndexNow). The key is public by design: it is
     // served at /{key}.txt to prove site ownership. Production only by default.

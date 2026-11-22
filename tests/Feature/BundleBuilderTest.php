@@ -226,4 +226,55 @@ class BundleBuilderTest extends TestCase
         $this->assertEquals('2026-10-31', $b->date->toDateString());
         $this->assertEqualsCanonicalizing([$sat->id, $sun->id], $b->legs->pluck('id')->all());
     }
+
+    /* ------------------------------------------------ legacy / invalid slips (the 22 Nov issue) */
+
+    public function test_old_invalid_slip_with_a_leg_in_play_is_replaced_by_a_valid_one(): void
+    {
+        // A 1.44 "2 odds" built by the old top-two logic; its first leg already started.
+        $started = $this->pick(['odds' => 1.20, 'kickoff' => now()->subMinutes(30)]);
+        $later = $this->pick(['odds' => 1.20, 'kickoff' => now()->addHours(8)]);
+        $old = AccumulatorBundle::create(['type' => AccumulatorBundle::TYPE_BANKER_2, 'date' => now('Africa/Lagos')->toDateString(), 'combined_odds' => 1.44, 'status' => 'pending']);
+        $old->legs()->attach([$started->id => ['position' => 0], $later->id => ['position' => 1]]);
+
+        // picks still to come that can make a real 2 odds
+        $this->pick(['odds' => 1.42, 'kickoff' => now()->addHours(3)]);
+        $this->pick(['odds' => 1.43, 'kickoff' => now()->addHours(4)]);
+        $this->rebuild();
+
+        $b = $this->bundle(AccumulatorBundle::TYPE_BANKER_2);
+        $this->assertGreaterThanOrEqual(2.0, $b->combined_odds);
+        $this->assertFalse($b->legs->contains('id', $started->id), 'must not include a leg already in play');
+    }
+
+    public function test_invalid_slips_never_count_in_the_record(): void
+    {
+        $a = $this->pick(['odds' => 1.20, 'kickoff' => now()->subHours(3), 'settled_at' => now(), 'hit' => true, 'home_goals' => 1, 'away_goals' => 0]);
+        $old = AccumulatorBundle::create(['type' => AccumulatorBundle::TYPE_BANKER_2, 'date' => now()->subDay()->toDateString(), 'combined_odds' => 1.44, 'status' => 'pending']);
+        $old->legs()->attach([$a->id => ['position' => 0]]);
+
+        $this->rebuild();
+
+        $this->assertSame('pending', $old->fresh()->status, 'invalid slip is not graded');
+        $this->assertSame(0, AccumulatorBundle::graded()->count());
+    }
+
+    public function test_tomorrows_slips_are_built_too(): void
+    {
+        $this->pick(['odds' => 1.42, 'kickoff' => now()->addDay()->setTime(14, 0)]);
+        $this->pick(['odds' => 1.43, 'kickoff' => now()->addDay()->setTime(16, 0)]);
+        $this->rebuild();
+
+        $b = $this->bundle(AccumulatorBundle::TYPE_BANKER_2);
+        $this->assertNotNull($b);
+        $this->assertSame(now('Africa/Lagos')->addDay()->toDateString(), $b->date->toDateString());
+    }
+
+    public function test_combos_command_rebuilds(): void
+    {
+        $this->pick(['odds' => 1.42]);
+        $this->pick(['odds' => 1.43]);
+        $this->artisan('lsa:combos')->assertSuccessful();
+        $this->assertNotNull($this->bundle(AccumulatorBundle::TYPE_BANKER_2));
+    }
 }

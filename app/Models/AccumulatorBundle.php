@@ -43,12 +43,24 @@ class AccumulatorBundle extends Model
         return $query->whereDate('date', '>=', now(Prediction::displayTimezone())->toDateString())->orderBy('date');
     }
 
-    /** Graded combos (won/lost), newest first — the public combo record. */
+    /** Graded combos (won/lost) that met their rule, newest first: the public combo record. */
     public function scopeGraded(Builder $query): Builder
     {
-        return $query->whereIn('type', [self::TYPE_BANKER_2, self::TYPE_ODDS_10])
-            ->whereIn('status', [self::STATUS_WON, self::STATUS_LOST])
+        return $query->whereIn('status', [self::STATUS_WON, self::STATUS_LOST])
+            ->where(fn (Builder $q) => $q
+                ->where(fn (Builder $b) => $b->where('type', self::TYPE_BANKER_2)
+                    ->where('combined_odds', '>=', \App\Services\BundleBuilder::BANKER_2['low'] - 0.005))
+                ->orWhere(fn (Builder $b) => $b->where('type', self::TYPE_ODDS_10)
+                    ->where('combined_odds', '>=', \App\Services\BundleBuilder::ODDS_10['low'] - 0.005)))
             ->orderByDesc('date');
+    }
+
+    /** Does a slip of this type meet the current rule (at least 2.00 / 10.00 odds)? */
+    public static function meetsRule(string $type, ?float $odds): bool
+    {
+        $rule = \App\Services\BundleBuilder::RULES[$type] ?? null;
+
+        return $rule === null || ($odds !== null && $odds >= $rule['low'] - 0.005 && $odds <= $rule['high'] + 0.005);
     }
 
     public function label(): string

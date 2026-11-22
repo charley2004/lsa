@@ -9,15 +9,15 @@ class AccumulatorController extends Controller
 {
     public function index()
     {
-        $bundles = AccumulatorBundle::with('legs')
-            ->upcoming()
-            ->get()
-            ->keyBy('type');
+        $upcoming = AccumulatorBundle::with('legs')->upcoming()->get();
 
         return view('pages.combos', [
-            'banker2' => $bundles->get(AccumulatorBundle::TYPE_BANKER_2),
-            'odds10' => $bundles->get(AccumulatorBundle::TYPE_ODDS_10),
-            'weekendPicks' => $bundles->get(AccumulatorBundle::TYPE_WEEKEND_PICKS),
+            // today's slips first, then tomorrow's; 2 odds before 10 odds
+            'slips' => $upcoming->whereIn('type', [AccumulatorBundle::TYPE_BANKER_2, AccumulatorBundle::TYPE_ODDS_10])
+                ->filter(fn ($b) => AccumulatorBundle::meetsRule($b->type, $b->combined_odds))
+                ->sortBy(fn ($b) => [$b->date->toDateString(), $b->type === AccumulatorBundle::TYPE_BANKER_2 ? 0 : 1])
+                ->values(),
+            'weekendPicks' => $upcoming->firstWhere('type', AccumulatorBundle::TYPE_WEEKEND_PICKS),
             // Every active bookmaker deal, not just Paripesa/BC Games by name —
             // add a new one in /admin and it shows up here automatically, no
             // code change needed.

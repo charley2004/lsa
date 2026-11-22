@@ -4,7 +4,7 @@
 @section('description', "Today's 2 odds and 10 odds combos built from LSA's confident, odds-backed picks: every leg shown, the model's chance of landing, and every past combo graded won or lost.")
 
 @php
-    $bundles = collect([$banker2, $odds10, $weekendPicks])->filter();
+    $bundles = $slips->concat(array_filter([$weekendPicks]));
     $legIcon = ['won' => '✓', 'lost' => '✕', 'void' => '–', 'pending' => ''];
 @endphp
 

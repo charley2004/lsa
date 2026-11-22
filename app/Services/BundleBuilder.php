@@ -32,6 +32,11 @@ use Illuminate\Support\Collection;
  */
 class BundleBuilder
 {
+    public const RULES = [
+        AccumulatorBundle::TYPE_BANKER_2 => self::BANKER_2,
+        AccumulatorBundle::TYPE_ODDS_10 => self::ODDS_10,
+    ];
+
     public const BANKER_2 = ['min_legs' => 2, 'max_legs' => 5, 'low' => 2.00, 'high' => 2.50, 'target' => 2.0];
 
     public const ODDS_10 = ['min_legs' => 3, 'max_legs' => 12, 'low' => 10.0, 'high' => 15.0, 'target' => 10.0];
@@ -43,8 +48,12 @@ class BundleBuilder
         // The visitor's calendar day (Lagos), not the server's UTC day.
         $today = Carbon::today(Prediction::displayTimezone());
 
-        $this->buildCombo(AccumulatorBundle::TYPE_BANKER_2, self::BANKER_2, $today);
-        $this->buildCombo(AccumulatorBundle::TYPE_ODDS_10, self::ODDS_10, $today);
+        // Today's slips, plus tomorrow's so evening visitors see the next one.
+        // Tomorrow's keep improving as more of its fixtures get scanned.
+        foreach ([$today, $today->copy()->addDay()] as $day) {
+            $this->buildCombo(AccumulatorBundle::TYPE_BANKER_2, self::BANKER_2, $day);
+            $this->buildCombo(AccumulatorBundle::TYPE_ODDS_10, self::ODDS_10, $day);
+        }
         $this->buildWeekendPicks($today);
         $this->gradePending();
     }
@@ -59,6 +68,8 @@ class BundleBuilder
             ->where('odds', '>', 1)
             ->whereNotNull('kickoff')
             ->where('kickoff', '>', now())
+            // only that day's own fixtures (Lagos calendar day)
+            ->where('kickoff', '>=', $day->copy()->startOfDay()->utc())
             ->where('kickoff', '<=', $day->copy()->endOfDay()->utc())
             ->get()
             // One leg per fixture: two markets from one match aren't two
@@ -71,6 +82,14 @@ class BundleBuilder
     private function buildCombo(string $type, array $rule, Carbon $day): void
     {
         $existing = AccumulatorBundle::with('legs')->where('type', $type)->whereDate('date', $day->toDateString())->first();
+
+        // A slip that doesn't meet its own rule (e.g. a 1.44 "2 odds" built by
+        // the old top-two logic) is never frozen or graded: discard and rebuild
+        // from the picks that haven't kicked off yet.
+        if ($existing && ! AccumulatorBundle::meetsRule($type, $existing->combined_odds)) {
+            $existing->delete();
+            $existing = null;
+        }
 
         // Frozen once a leg has kicked off: the published slip never changes.
         if ($existing && ($existing->locked_at || $existing->legs->contains(fn ($p) => $p->kickoff && $p->kickoff->lte(now())))) {
@@ -202,6 +221,7 @@ class BundleBuilder
             ->whereIn('type', [AccumulatorBundle::TYPE_BANKER_2, AccumulatorBundle::TYPE_ODDS_10])
             ->where('status', AccumulatorBundle::STATUS_PENDING)
             ->get()
+            ->filter(fn (AccumulatorBundle $b) => AccumulatorBundle::meetsRule($b->type, $b->combined_odds))
             ->each(function (AccumulatorBundle $b) {
                 $legs = $b->legs;
                 if ($legs->isEmpty()) {

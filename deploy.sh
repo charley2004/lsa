@@ -68,6 +68,13 @@ ls -1t "$BACKUP_DIR"/db-* 2>/dev/null | tail -n +11 | xargs -r rm -f
 if [ "$LOCAL" != "$REMOTE" ]; then
   CHANGED="$(git diff --name-only "$LOCAL" "$REMOTE")"
   git merge --ff-only --quiet origin/main
+  # If this script itself just changed, finish the deploy with the NEW version
+  # (bash would otherwise keep running the old copy it already opened).
+  if echo "$CHANGED" | grep -qx "deploy.sh"; then
+    echo "deploy.sh updated; re-running the new version"
+    flock -u 9
+    exec bash "$APP_DIR/deploy.sh" --force
+  fi
   if echo "$CHANGED" | grep -qx "composer.lock" && [ -n "$COMPOSER" ]; then
     "$COMPOSER" install --no-dev --no-interaction --prefer-dist --optimize-autoloader
   fi
@@ -75,5 +82,6 @@ fi
 
 "$PHP" artisan migrate --force
 "$PHP" artisan optimize
+"$PHP" artisan lsa:combos   # rebuild + grade combos now, not at the next sync
 
 echo "=== $(date '+%F %T') deployed ${REMOTE:0:7} OK (database: $CONN)"
